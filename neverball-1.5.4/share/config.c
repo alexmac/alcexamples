@@ -115,8 +115,8 @@ static struct
     int         cur;
 } option_d[] = {
     { &CONFIG_FULLSCREEN,   "fullscreen",   0 },
-    { &CONFIG_WIDTH,        "width",        800 },
-    { &CONFIG_HEIGHT,       "height",       600 },
+    { &CONFIG_WIDTH,        "width",        1024 },
+    { &CONFIG_HEIGHT,       "height",       768 },
     { &CONFIG_STEREO,       "stereo",       0 },
     { &CONFIG_CAMERA,       "camera",       0 },
     { &CONFIG_TEXTURES,     "textures",     1 },

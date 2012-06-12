@@ -1,5 +1,16 @@
 
 #------------------------------------------------------------------------------
+# Default target (careful, this is recursive)
+ALCEXTRA:=/path/to/alchemyextra
+GLS3D:=/path/to/GLS3D
+
+all:
+	$(MAKE) neverball.swf CC=$(ALCHEMY)/usr/bin/gcc DEBUG=0 ENABLE_NLS=0 \
+		LDFLAGS="-L$(ALCEXTRA)/usr/lib/ -L$(GLS3D)/install/usr/lib/" \
+		SDL_CPPFLAGS="-I$(ALCEXTRA)/usr/include/ -I$(GLS3D)/install/usr/include -I$(ALCHEMY)/usr/include/libpng15 -I$(ALCHEMY)/usr/include/SDL -I$(ALCEXTRA)/usr/include/SDL" \
+		PNG_CPPFLAGS=" " SDL_LIBS="-lSDL -lvgl " PNG_LIBS=" -lpng "
+
+#------------------------------------------------------------------------------
 
 BUILD := $(shell head -n1 BUILD 2> /dev/null || echo release)
 
@@ -42,10 +53,11 @@ endif
 # Optional flags (CFLAGS, CPPFLAGS, ...)
 
 ifeq ($(DEBUG),1)
-    CFLAGS   := -g
+    CFLAGS   := -O0 
+#    CFLAGS   := -g -O0
     CPPFLAGS :=
 else
-    CFLAGS   := -O2
+    CFLAGS   := -O4 -falcon
     CPPFLAGS := -DNDEBUG
 endif
 
@@ -131,14 +143,14 @@ ifdef DARWIN
     OGL_LIBS  := -framework OpenGL
 endif
 
-BASE_LIBS := -ljpeg $(PNG_LIBS) $(FS_LIBS)
+BASE_LIBS := -ljpeg $(PNG_LIBS) -lz $(FS_LIBS) 
 
 ifdef DARWIN
     BASE_LIBS += -L/opt/local/lib
 endif
 
 ALL_LIBS := $(SDL_LIBS) $(BASE_LIBS) $(TILT_LIBS) $(INTL_LIBS) -lSDL_ttf \
-    -lvorbisfile $(OGL_LIBS)
+    -lvorbisfile $(OGL_LIBS) -lfreetype -lvorbis -logg
 
 #------------------------------------------------------------------------------
 
@@ -147,7 +159,7 @@ ifdef MINGW
 endif
 
 MAPC_TARG := mapc$(EXT)
-BALL_TARG := neverball$(EXT)
+BALL_TARG := neverball.swf
 PUTT_TARG := neverputt$(EXT)
 
 ifdef MINGW
@@ -309,16 +321,38 @@ DESKTOPS := $(basename $(wildcard dist/*.desktop.in))
 
 #------------------------------------------------------------------------------
 
-all : $(BALL_TARG) $(PUTT_TARG) $(MAPC_TARG) sols locales desktops
+maps: sols
 
-$(BALL_TARG) : $(BALL_OBJS)
-	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
+AlcConsole.abc: AlcConsole.as $(ALCHEMY)/usr/share/HttpVFS.as
+	mkdir -p vfs
+	rm -f *.zip
+	cd data1 && zip -9 -q -r ../data1.zip *
+	cd data2 && zip -9 -q -r ../data2.zip *
+	cd data3 && zip -9 -q -r ../data3.zip *
+
+	java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
+	-abcfuture -AS3 -strict -optimize \
+	-import $(ALCHEMY)/usr/lib/builtin.abc \
+	-import $(ALCHEMY)/usr/lib/playerglobal.abc \
+	-import $(GLS3D)/install/usr/lib/libGL.abc \
+	-import $(ALCHEMY)/usr/lib/CModule.abc \
+	-import $(ALCHEMY)/usr/lib/C_Run.abc \
+	-import $(ALCHEMY)/usr/lib/initLib.abc \
+	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
+	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
+	AlcConsole.as -outdir . -out AlcConsole
+
+$(BALL_TARG) : $(BALL_OBJS) AlcConsole.abc
+	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) -symbol-abc=AlcConsole.abc -jvmopt=-Xmx4G -emit-swf -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
-	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)
+	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) -emit-swf $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(MAPC_TARG) : $(MAPC_OBJS)
 	$(CC) $(ALL_CFLAGS) -o $(MAPC_TARG) $(MAPC_OBJS) $(LDFLAGS) $(BASE_LIBS)
+
+genvfs:
+	cd vfsdata && $(MAKE)
 
 # Work around some extremely helpful sdl-config scripts.
 
@@ -341,9 +375,10 @@ clean-src :
 	$(RM) $(MAPC_TARG) $(MAPC_OBJS) $(MAPC_DEPS)
 
 clean : clean-src
-	$(RM) $(SOLS)
+#	$(RM) $(SOLS)
 	$(RM) $(DESKTOPS)
 	$(MAKE) -C po clean
+	rm -f AlcConsole.abc
 
 test : all
 	./neverball
@@ -354,7 +389,7 @@ TAGS :
 
 #------------------------------------------------------------------------------
 
-.PHONY : all sols locales clean-src clean test TAGS
+.PHONY : all sols locales clean-src clean test TAGS genvfs
 
 -include $(BALL_DEPS) $(PUTT_DEPS) $(MAPC_DEPS)
 

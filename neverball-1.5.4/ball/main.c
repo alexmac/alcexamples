@@ -17,6 +17,7 @@
 #include <SDL.h>
 #include <stdio.h>
 #include <string.h>
+#include <AS3.h>
 
 #include "glext.h"
 #include "config.h"
@@ -376,11 +377,12 @@ static void make_dirs_and_migrate(void)
     fs_mkdir("Screenshots");
 }
 
+static int t1, t0, uniform;
+
 int main(int argc, char *argv[])
 {
     SDL_Joystick *joy = NULL;
-    int t1, t0, uniform;
-
+    
     if (!fs_init(argv[0]))
     {
         fprintf(stderr, "Failure to initialize virtual file system: %s\n",
@@ -407,6 +409,9 @@ int main(int argc, char *argv[])
 
     config_init();
     config_load();
+
+	/* unlock all levels by defalut */
+	config_set_cheat();
 
     /* Initialize the joystick. */
 
@@ -444,6 +449,25 @@ int main(int argc, char *argv[])
 
     uniform = config_get_d(CONFIG_UNIFORM);
     t0 = SDL_GetTicks();
+
+#ifdef __AVM2__
+	/* 
+	AlcConsole.as will get a pointer to mainLoopTick() and
+	call that every frame instead.
+	This way we effectively integrate the game loop with the
+	FlashPlayer event loop (so we don't hang in here as main() 
+	is called from within the FlashPlayer event loop).
+	 */
+	
+	
+	/*
+	Here we throw an exception so that we can break the control
+	out of main() without returninng.
+	The code in AclConsole.as will take care of calling the 
+	factored out game loop code by calling mainLoopTick() periodically.
+	*/
+    AS3_LibInit();
+#endif
 
     while (loop())
     {
@@ -496,6 +520,50 @@ int main(int argc, char *argv[])
 
     return 0;
 }
+
+#ifdef __AVM2__
+void mainLoopTick()
+{
+	/*inline_as3 ("trace('mainLoopTick starting...')");*/
+	loop();
+
+	t1 = SDL_GetTicks();
+		
+	if (uniform)
+	{
+		/* Step the game uniformly, as configured. */
+			
+		int u;
+			
+		for (u = 0; u < abs(uniform); ++u)
+		{
+			st_timer(DT);
+			t0 += (int) (DT * 1000);
+		}
+	}
+	else
+	{
+		/* Step the game state at least up to the current time. */
+			
+		while (t1 > t0)
+		{
+			st_timer(DT);
+			t0 += (int) (DT * 1000);
+		}
+	}
+		
+	/* Render. */
+		
+	st_paint(0.001f * t0);
+	video_swap();
+		
+	if (uniform < 0)
+		shot();
+		
+	if (config_get_d(CONFIG_NICE))
+		SDL_Delay(1);
+}
+#endif
 
 /*---------------------------------------------------------------------------*/
 

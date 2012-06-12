@@ -94,6 +94,12 @@ void st_timer(float dt)
 
 void st_point(int x, int y, int dx, int dy)
 {
+    static int lx=0, ly=0; /* HACK: vgl mouse relative coords are broken */
+    dx = x - lx;
+    dy = y - ly;
+    lx = x;
+    ly = y;
+
     if (state && state->point)
         state->point(state->gui_id, x, y, dx, dy);
 }

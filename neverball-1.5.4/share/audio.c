@@ -13,6 +13,7 @@
  */
 
 #include <SDL.h>
+#include <AS3.h>
 
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
@@ -193,10 +194,20 @@ static void voice_free(struct voice *V)
 
 /*---------------------------------------------------------------------------*/
 
-static void audio_step(void *data, Uint8 *stream, int length)
+static const int audioBufferLength = 16384;
+Uint8 *audioBuffer = NULL;
+
+void audio_step(void *data, Uint8 *_stream, int _length)
 {
+    Uint8 *stream = audioBuffer;
+    int length = audioBufferLength;
     struct voice *V = voices;
     struct voice *P = NULL;
+
+    if(audioBuffer == NULL)
+    {
+        stream = audioBuffer = malloc(audioBufferLength);
+    }
 
     /* Zero the output buffer. */
 
@@ -267,12 +278,16 @@ void audio_init(void)
     {
         /* Start the audio thread. */
 
+        #ifdef __AVM2__
+        audio_state = 1;
+        #else
         if (SDL_OpenAudio(&spec, NULL) == 0)
         {
             audio_state = 1;
             SDL_PauseAudio(0);
         }
         else fprintf(stderr, "%s\n", SDL_GetError());
+        #endif
     }
 
     /* Set the initial volumes. */
@@ -345,6 +360,8 @@ void audio_music_play(const char *filename)
 
         SDL_LockAudio();
         {
+        	inline_as3("trace('Calling voice_init() from audio_music_play() on: ' + CModule.readString(%0, %1));\n"
+        			   : : "r"(filename), "r"(strlen(filename)));
             if ((music = voice_init(filename, 0.0f)))
             {
                 music->loop = 1;

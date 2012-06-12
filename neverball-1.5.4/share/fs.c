@@ -19,13 +19,22 @@
 
 /* -------------------------------------------------------------------------- */
 
+#define BYPASS_PHYSFS
+
 struct fs_file
 {
+#ifdef BYPASS_PHYSFS
+	FILE* handle;
+#elif
     PHYSFS_file *handle;
+#endif
+	
+	const char* path;
 };
 
 int fs_init(const char *argv0)
 {
+#ifndef BYPASS_PHYSFS
     if (PHYSFS_init(argv0))
     {
         PHYSFS_permitSymbolicLinks(1);
@@ -33,6 +42,8 @@ int fs_init(const char *argv0)
     }
 
     return 0;
+#endif
+	return 1;
 }
 
 int fs_quit(void)
@@ -42,41 +53,55 @@ int fs_quit(void)
 
 const char *fs_error(void)
 {
-    return PHYSFS_getLastError();
+    /*return PHYSFS_getLastError();*/
+	fprintf(stderr, "fs_error not yet implemented");
+	return "";
 }
 
 /* -------------------------------------------------------------------------- */
 
 const char *fs_base_dir(void)
 {
-    return PHYSFS_getBaseDir();
+    /*return PHYSFS_getBaseDir();*/
+	return "/";
 }
 
 int fs_add_path(const char *path)
 {
+/*#ifdef BYPASS_PHYSFS*/
+	fprintf(stderr, "fs_add_path not yet implemented, argument path: %s\n", path);
+	return 0;
+/*#elif
     return PHYSFS_addToSearchPath(path, 0);
+#endif*/
 }
 
 int fs_set_write_dir(const char *path)
 {
-    return PHYSFS_setWriteDir(path);
+    /*return PHYSFS_setWriteDir(path);*/
+	fprintf(stderr, "fs_set_write_dir not yet implemented, arugment path: %s\n", path);
+	return 0;
 }
 
 const char *fs_get_write_dir(void)
 {
-    return PHYSFS_getWriteDir();
+    /*return PHYSFS_getWriteDir();*/
+	fprintf(stderr, "fs_get_write_dir not yet implemented");
+	return "/writeDir";
 }
 
 /* -------------------------------------------------------------------------- */
 
 Array fs_dir_scan(const char *path, int (*filter)(struct dir_item *))
 {
-    return dir_scan(path, filter, PHYSFS_enumerateFiles, PHYSFS_freeList);
+	fprintf(stderr, "fs_dir_scan not yet implemented, agrument path: %s\n", path);
+	return array_new(1);
+    /*return dir_scan(path, filter, PHYSFS_enumerateFiles, PHYSFS_freeList);*/
 }
 
 void fs_dir_free(Array items)
 {
-    dir_free(items);
+    /*dir_free(items);*/
 }
 
 /* -------------------------------------------------------------------------- */
@@ -90,6 +115,7 @@ fs_file fs_open(const char *path, const char *mode)
 
     if ((fh = malloc(sizeof (*fh))))
     {
+/*#ifndef BYPASS_PHYSFS
         switch (mode[0])
         {
         case 'r':
@@ -109,9 +135,25 @@ fs_file fs_open(const char *path, const char *mode)
         }
         else
         {
+		    fprintf(stderr, "File Not Found: %s\n", path);
             free(fh);
             fh = NULL;
         }
+#elif
+*/		fh->handle = fopen(path, mode);
+
+		if (fh->handle)
+		{
+			/*fprintf(stderr, "Successfully opened file: %s\n", path);*/
+			fh->path = path;
+		}
+		else
+        {
+		    fprintf(stderr, "I can't open file: %s with mode %s\n", path, mode);
+            free(fh);
+            fh = NULL;
+        }		
+/*#endif*/
     }
 
     return fh;
@@ -119,55 +161,86 @@ fs_file fs_open(const char *path, const char *mode)
 
 int fs_close(fs_file fh)
 {
-    if (PHYSFS_close(fh->handle))
+	int result;
+	
+	/*fprintf(stderr, "fs_close for path: %s\n", fh->path);*/
+	result = fclose(fh->handle);
+	free(fh);
+	return result;
+	
+/*    if (PHYSFS_close(fh->handle))
     {
         free(fh);
         return 1;
     }
-    return 0;
+    return 0;*/
 }
 
 /* -------------------------------------------------------------------------- */
 
 int fs_mkdir(const char *path)
 {
-    return PHYSFS_mkdir(path);
+    /*return PHYSFS_mkdir(path);*/
+	fprintf(stderr, "fs_mkdir_dir not yet implemented, arugment path: %s\n", path);
+	return 0;
 }
 
 int fs_exists(const char *path)
 {
-    return PHYSFS_exists(path);
+    /*return PHYSFS_exists(path);*/
+	fprintf(stderr, "fs_exists not yet implemented, arugment path: %s\n", path);
+	return 1; /* report it always exists for now */
 }
 
 int fs_remove(const char *path)
 {
-    return PHYSFS_delete(path);
+	/*return PHYSFS_delete(path);*/
+	fprintf(stderr, "fs_remove not yet implemented, arugment path: %s\n", path);
+	return 0;
 }
 
 /* -------------------------------------------------------------------------- */
 
 int fs_read(void *data, int size, int count, fs_file fh)
 {
-    return PHYSFS_read(fh->handle, data, size, count);
+    /*return PHYSFS_read(fh->handle, data, size, count);*/
+
+/*	fprintf(stderr, "fs_read for %s, %i bytes at pos %i\n", fh->path, (int)size * count, (int)ftell(fh->handle));*/
+	int result = fread(data, size, count, fh->handle);
+/*	if (result != count)
+	{
+		fprintf(stderr, "! Only %i records read", result);
+		fprintf(stderr, "File size is %i", fs_length(fh->handle));
+	}
+*/				
+
+	return result;
 }
 
 int fs_write(const void *data, int size, int count, fs_file fh)
 {
-    return PHYSFS_write(fh->handle, data, size, count);
+    /*return PHYSFS_write(fh->handle, data, size, count);*/
+	/*fprintf(stderr, "fs_write not yet implemented");*/
+	return 0;
 }
 
 int fs_flush(fs_file fh)
 {
-    return PHYSFS_flush(fh->handle);
+    /*return PHYSFS_flush(fh->handle);*/
+	fprintf(stderr, "fs_flush not yet implemented, arugment path: %s\n", fh->path);
+	return 0;
 }
 
 long fs_tell(fs_file fh)
 {
-    return PHYSFS_tell(fh->handle);
+    /*return PHYSFS_tell(fh->handle);*/
+	return ftell(fh->handle);
 }
 
 int fs_seek(fs_file fh, long offset, int whence)
 {
+	return fseek(fh->handle, offset, whence);
+	/*
     PHYSFS_uint64 pos = 0;
     PHYSFS_sint64 cur = PHYSFS_tell(fh->handle);
     PHYSFS_sint64 len = PHYSFS_fileLength(fh->handle);
@@ -192,16 +265,26 @@ int fs_seek(fs_file fh, long offset, int whence)
     }
 
     return PHYSFS_seek(fh->handle, pos);
+	 */
 }
 
 int fs_eof(fs_file fh)
 {
-    return PHYSFS_eof(fh->handle);
+	return feof(fh->handle);
+   /* return PHYSFS_eof(fh->handle);*/
 }
 
 int fs_length(fs_file fh)
 {
-    return PHYSFS_fileLength(fh->handle);
+	long curPos;
+	long size;
+
+	curPos = ftell(fh->handle);
+	fseek(fh->handle, 0, SEEK_END);
+	size = ftell(fh->handle);
+	fseek(fh->handle, curPos, SEEK_SET);
+	return size;
+   /* return PHYSFS_fileLength(fh->handle); */
 }
 
 /* -------------------------------------------------------------------------- */
