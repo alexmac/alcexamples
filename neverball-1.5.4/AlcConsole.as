@@ -19,6 +19,7 @@ package com.adobe.alchemy
   import flash.net.LocalConnection;
   import flash.net.URLRequest;
   import flash.events.Event;
+  import flash.ui.Keyboard;
   import flash.events.KeyboardEvent;
   import flash.events.MouseEvent;
   import flash.media.SoundChannel;
@@ -76,6 +77,14 @@ package com.adobe.alchemy
       }
     }
 
+    var zfs:ZipBackingStore = new ZipBackingStore();
+  public function addVFSZip(x:*) {
+    if(!zfs) {
+      zfs = new ZipBackingStore();
+    }
+    zfs.addZip(x)
+  }
+
   public class AlcConsole extends Sprite
   {
     public static var current:AlcConsole;
@@ -85,7 +94,6 @@ package com.adobe.alchemy
     private var bm:Bitmap
     private var bmd:BitmapData
     private var vbufferptr:int, vgl_mx:int, vgl_my:int, kp:int, vgl_buttons:int;
-    //private var enginetickptr:int
     private var mainloopTickPtr:int, soundUpdatePtr:int, audioBufferPtr:int;
     private var _tf:TextField;
     private var inputContainer
@@ -97,52 +105,11 @@ package com.adobe.alchemy
     private var _stage:Stage3D;
     private var _context:Context3D;
     private var rendered:Boolean = false;
-    private var datazips:Array = [];
-    private var zfs:ZipBackingStore
 
     public function AlcConsole(container:DisplayObjectContainer = null)
     {
       AlcConsole.current = this;
-      stage.frameRate = 60;
-
-      zfs = new ZipBackingStore()
-      CModule.getVFS().addBackingStore(zfs, null);
-
-      var datazip1 = new URLLoader(new URLRequest("data1.zip"));
-      datazip1.dataFormat = URLLoaderDataFormat.BINARY;
-      datazip1.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onError)
-      datazip1.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError)
-      datazip1.addEventListener(IOErrorEvent.IO_ERROR, onError)
-      datazip1.addEventListener(Event.COMPLETE, onComplete)
-      datazip1.addEventListener(ProgressEvent.PROGRESS, onProgress)
-
-      var datazip2 = new URLLoader(new URLRequest("data2.zip"));
-      datazip2.dataFormat = URLLoaderDataFormat.BINARY;
-      datazip2.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onError)
-      datazip2.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError)
-      datazip2.addEventListener(IOErrorEvent.IO_ERROR, onError)
-      datazip2.addEventListener(Event.COMPLETE, onComplete)
-      datazip2.addEventListener(ProgressEvent.PROGRESS, onProgress)
-
-      var datazip3 = new URLLoader(new URLRequest("data3.zip"));
-      datazip3.dataFormat = URLLoaderDataFormat.BINARY;
-      datazip3.addEventListener(AsyncErrorEvent.ASYNC_ERROR, onError)
-      datazip3.addEventListener(SecurityErrorEvent.SECURITY_ERROR, onError)
-      datazip3.addEventListener(IOErrorEvent.IO_ERROR, onError)
-      datazip3.addEventListener(Event.COMPLETE, onComplete)
-      datazip3.addEventListener(ProgressEvent.PROGRESS, onProgress)
-    }
-
-    private function onComplete(e:Event):void
-    {
-      datazips.push(e.target.data);
-      if(datazips.length == 3)
-        initG(null)
-
-      //CModule.getVFS().addBackingStore(vfs, null)
-
-      //CModule.getVFS().addBackingStore(new RootFSBackingStore(datazip.data), null)
-      //initG(null)
+      addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
     }
 
     private function onError(e:Event):void
@@ -153,7 +120,7 @@ package com.adobe.alchemy
     {
     }
 
-    private function initG(e:Event):void
+    public function onAddedToStage(e:Event):void
     {
       inputContainer = new Sprite()
       addChild(inputContainer)
@@ -208,23 +175,19 @@ package com.adobe.alchemy
 
     private function runMain(event:Event):void
     {
-      // Keep Loading VFS zips until we're done
-      if(datazips.length > 0) {
-        zfs.addZip(datazips.pop());
-        return;
-      }
+      CModule.getVFS().addBackingStore(zfs, null);
 
       this.removeEventListener(Event.ENTER_FRAME, runMain);
 
-    var argv:Vector.<String> = new Vector.<String>();
-    argv.push("/data/neverball.swf");
+      var argv:Vector.<String> = new Vector.<String>();
+      argv.push("/data/neverball.swf");
       initLib(this, argv);
       vbufferptr = CModule.read32(CModule.getPublicSym("__avm2_vgl_argb_buffer"))
       vgl_mx = CModule.getPublicSym("vgl_cur_mx");
       vgl_my = CModule.getPublicSym("vgl_cur_my");
       vgl_buttons = CModule.getPublicSym("vgl_cur_buttons");
 
-    mainloopTickPtr = CModule.getPublicSym("mainLoopTick");
+      mainloopTickPtr = CModule.getPublicSym("mainLoopTick");
       soundUpdatePtr = CModule.getPublicSym("audio_step");
       audioBufferPtr = CModule.getPublicSym("audioBuffer");
       addEventListener(Event.ENTER_FRAME, framebufferBlit);
@@ -245,6 +208,7 @@ package com.adobe.alchemy
           CModule.write8(buf, keybytes.readUnsignedByte());
         } else {
         keybytes.position = 0;
+        keybytes.length = 0;
         kp = 0;
         }
       }
@@ -277,14 +241,16 @@ package com.adobe.alchemy
 
     public function bufferKeyDown(ke:KeyboardEvent) 
     {
-      ke.stopPropagation();
+      if(Keyboard.capsLock || ke.keyCode >= 127)
+        return;
 
       keybytes.writeByte(int(ke.keyCode & 0x7F));
     }
     
     public function bufferKeyUp(ke:KeyboardEvent) 
     {
-      ke.stopPropagation();
+      if(Keyboard.capsLock || ke.keyCode > 128)
+        return;
 
       keybytes.writeByte(int(ke.keyCode | 0x80));
     }
