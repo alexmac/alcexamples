@@ -76,12 +76,14 @@ cvar_t *r_allowResize; // make window resizable
 cvar_t *r_centerWindow;
 cvar_t *r_sdlDriver;
 
+#ifndef __AVM2__
 void (APIENTRYP qglActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglClientActiveTextureARB) (GLenum texture);
 void (APIENTRYP qglMultiTexCoord2fARB) (GLenum target, GLfloat s, GLfloat t);
 
 void (APIENTRYP qglLockArraysEXT) (GLint first, GLsizei count);
 void (APIENTRYP qglUnlockArraysEXT) (void);
+#endif
 
 /*
 ===============
@@ -580,6 +582,9 @@ static void GLimp_InitExtensions( void )
 		ri.Printf( PRINT_ALL, "...GL_EXT_texture_env_add not found\n" );
 	}
 
+#ifdef __AVM2__
+	glConfig.numTextureUnits = 8;
+#else
 	// GL_ARB_multitexture
 	qglMultiTexCoord2fARB = NULL;
 	qglActiveTextureARB = NULL;
@@ -616,10 +621,12 @@ static void GLimp_InitExtensions( void )
 		}
 	}
 	else
+#endif
 	{
 		ri.Printf( PRINT_ALL, "...GL_ARB_multitexture not found\n" );
 	}
 
+#ifndef __AVM2__
 	// GL_EXT_compiled_vertex_array
 	if ( GLimp_HaveExtension( "GL_EXT_compiled_vertex_array" ) )
 	{
@@ -639,6 +646,7 @@ static void GLimp_InitExtensions( void )
 		}
 	}
 	else
+#endif
 	{
 		ri.Printf( PRINT_ALL, "...GL_EXT_compiled_vertex_array not found\n" );
 	}

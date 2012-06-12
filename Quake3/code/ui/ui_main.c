@@ -190,7 +190,7 @@ Q_EXPORT intptr_t vmMain( int command, int arg0, int arg1, int arg2, int arg3, i
 		  UI_DrawConnectScreen( arg0 );
 		  return 0;
 	  case UI_HASUNIQUECDKEY: // mod authors need to observe this
-	    return qtrue; // change this to qfalse for mods!
+	    return qfalse; // change this to qfalse for mods!
 
 	}
 
@@ -5795,10 +5795,10 @@ static cvarTable_t		cvarTable[] = {
 	{ &ui_server14, "server14", "", CVAR_ARCHIVE },
 	{ &ui_server15, "server15", "", CVAR_ARCHIVE },
 	{ &ui_server16, "server16", "", CVAR_ARCHIVE },
-	{ &ui_cdkeychecked, "ui_cdkeychecked", "0", CVAR_ROM },
+	{ &ui_cdkeychecked, "ui_cdkeychecked", "1", CVAR_ROM },
 	{ &ui_new, "ui_new", "0", CVAR_TEMP },
 	{ &ui_debug, "ui_debug", "0", CVAR_TEMP },
-	{ &ui_initialized, "ui_initialized", "0", CVAR_TEMP },
+	{ &ui_initialized, "ui_initialized", "1", CVAR_TEMP },
 	{ &ui_teamName, "ui_teamName", "Pagans", CVAR_ARCHIVE },
 	{ &ui_opponentName, "ui_opponentName", "Stroggs", CVAR_ARCHIVE },
 	{ &ui_redteam, "ui_redteam", "Pagans", CVAR_ARCHIVE },

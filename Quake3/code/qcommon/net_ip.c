@@ -1423,7 +1423,7 @@ static qboolean NET_GetCvars( void ) {
 #else
 	/* End users have it enabled so they can connect to ipv6-only hosts, but ipv4 will be
 	 * used if available due to ping */
-	net_enabled = Cvar_Get( "net_enabled", "3", CVAR_LATCH | CVAR_ARCHIVE );
+	net_enabled = Cvar_Get( "net_enabled", "0", CVAR_LATCH | CVAR_ARCHIVE );
 #endif
 	modified = net_enabled->modified;
 	net_enabled->modified = qfalse;
@@ -1653,6 +1653,7 @@ Sleeps msec or until something happens on the network
 */
 void NET_Sleep(int msec)
 {
+#ifndef __AVM2__
 	struct timeval timeout;
 	fd_set fdr;
 	int highestfd = -1, retval;
@@ -1694,6 +1695,7 @@ void NET_Sleep(int msec)
 		Com_Printf("Warning: select() syscall failed: %s\n", NET_ErrorString());
 	else if(retval > 0)
 		NET_Event(&fdr);
+#endif
 }
 
 /*

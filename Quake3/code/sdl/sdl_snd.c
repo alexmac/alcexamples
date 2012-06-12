@@ -44,6 +44,21 @@ cvar_t *s_sdlMixSamps;
 static int dmapos = 0;
 static int dmasize = 0;
 
+static const int audioBufferLength = 8192;
+Uint8 *audioBuffer = NULL;
+
+static void SNDDMA_AudioCallback(void *userdata, Uint8 *stream, int len);
+
+void engineTickSound()
+{
+	if(audioBuffer == NULL)
+    {
+        audioBuffer = malloc(audioBufferLength);
+    }
+
+	SNDDMA_AudioCallback(NULL, audioBuffer, audioBufferLength);
+}
+
 /*
 ===============
 SNDDMA_AudioCallback
@@ -147,7 +162,7 @@ qboolean SNDDMA_Init(void)
 
 	if (!s_sdlBits) {
 		s_sdlBits = Cvar_Get("s_sdlBits", "16", CVAR_ARCHIVE);
-		s_sdlSpeed = Cvar_Get("s_sdlSpeed", "0", CVAR_ARCHIVE);
+		s_sdlSpeed = Cvar_Get("s_sdlSpeed", "44100", CVAR_ARCHIVE);
 		s_sdlChannels = Cvar_Get("s_sdlChannels", "2", CVAR_ARCHIVE);
 		s_sdlDevSamps = Cvar_Get("s_sdlDevSamps", "0", CVAR_ARCHIVE);
 		s_sdlMixSamps = Cvar_Get("s_sdlMixSamps", "0", CVAR_ARCHIVE);
@@ -155,6 +170,8 @@ qboolean SNDDMA_Init(void)
 
 	Com_Printf( "SDL_Init( SDL_INIT_AUDIO )... " );
 
+	#ifdef __AVM2__
+	#else
 	if (!SDL_WasInit(SDL_INIT_AUDIO))
 	{
 		if (SDL_Init(SDL_INIT_AUDIO) == -1)
@@ -163,6 +180,7 @@ qboolean SNDDMA_Init(void)
 			return qfalse;
 		}
 	}
+	#endif
 
 	Com_Printf( "OK\n" );
 
@@ -201,12 +219,16 @@ qboolean SNDDMA_Init(void)
 	desired.channels = (int) s_sdlChannels->value;
 	desired.callback = SNDDMA_AudioCallback;
 
+	#ifdef __AVM2__
+	memcpy(&obtained, &desired, sizeof(SDL_AudioSpec));
+	#else
 	if (SDL_OpenAudio(&desired, &obtained) == -1)
 	{
 		Com_Printf("SDL_OpenAudio() failed: %s\n", SDL_GetError());
 		SDL_QuitSubSystem(SDL_INIT_AUDIO);
 		return qfalse;
 	}
+	#endif
 
 	SNDDMA_PrintAudiospec("SDL_AudioSpec", &obtained);
 

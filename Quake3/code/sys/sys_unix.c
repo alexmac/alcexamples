@@ -42,7 +42,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 qboolean stdinIsATTY;
 
 // Used to determine where to store user-specific files
-static char homePath[ MAX_OSPATH ] = { 0 };
+static char homePath[ MAX_OSPATH ] = { "/home" };
 
 /*
 ==================
@@ -89,7 +89,7 @@ const char *Sys_TempPath( void )
 	const char *TMPDIR = getenv( "TMPDIR" );
 
 	if( TMPDIR == NULL || TMPDIR[ 0 ] == '\0' )
-		return "/tmp";
+		return "/";
 	else
 		return TMPDIR;
 }
@@ -162,7 +162,7 @@ char *Sys_GetCurrentUser( void )
 	if ( (p = getpwuid( getuid() )) == NULL ) {
 		return "player";
 	}
-	return p->pw_name;
+	return (char*)"A1c3mY";
 }
 
 /*
@@ -708,6 +708,9 @@ Display a *nix dialog box
 */
 dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *title )
 {
+	#ifdef __AVM2__
+	Com_DPrintf( S_COLOR_YELLOW "DIALOG: %s %s\n", title, message );
+	#else
 	typedef enum
 	{
 		NONE = 0,
@@ -778,6 +781,7 @@ dialogResult_t Sys_Dialog( dialogType_t type, const char *message, const char *t
 
 		break;
 	}
+	#endif
 
 	Com_DPrintf( S_COLOR_YELLOW "WARNING: failed to show a dialog\n" );
 	return DR_OK;
@@ -831,8 +835,7 @@ void Sys_PlatformInit( void )
 	signal( SIGIOT, Sys_SigHandler );
 	signal( SIGBUS, Sys_SigHandler );
 
-	stdinIsATTY = isatty( STDIN_FILENO ) &&
-		!( term && ( !strcmp( term, "raw" ) || !strcmp( term, "dumb" ) ) );
+	stdinIsATTY = qfalse;
 }
 
 /*

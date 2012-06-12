@@ -3,3 +3,5 @@
 *.swf
 *.abc
 *.zip
+Quake3/build
+Quake3/q3vfs

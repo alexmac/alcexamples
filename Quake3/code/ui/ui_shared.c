@@ -84,6 +84,8 @@ static char		memoryPool[MEM_POOL_SIZE];
 static int		allocPoint, outOfMemory;
 
 
+
+#ifndef HARD_LINKED
 /*
 ===============
 UI_Alloc
@@ -121,7 +123,7 @@ void UI_InitMemory( void ) {
 qboolean UI_OutOfMemory( void ) {
 	return outOfMemory;
 }
-
+#endif
 
 
 
