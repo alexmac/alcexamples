@@ -1,43 +1,42 @@
 package com.adobe.alchemy
 {
-  import flash.display.Sprite;
-  import flash.text.TextField;
-  import flash.display.StageScaleMode;
-  import flash.display.DisplayObjectContainer;
   import flash.display.Bitmap
   import flash.display.BitmapData
-  import flash.geom.Rectangle
-  import flash.utils.ByteArray
-  import flash.net.LocalConnection;
-  import flash.net.URLRequest;
-  import flash.events.Event;
-  import flash.events.KeyboardEvent;
-  import flash.events.MouseEvent;
-  import flash.media.SoundChannel;
-  import flash.media.Sound;
-  import flash.events.SampleDataEvent;
-  import flash.utils.ByteArray;
-  import flash.utils.Endian;
-  import flash.events.Event;
-  import flash.events.EventDispatcher;
-  import flash.events.ProgressEvent;
-  import flash.events.SecurityErrorEvent;
-  import flash.events.IOErrorEvent;
-  import flash.events.AsyncErrorEvent;
+  import flash.display.DisplayObjectContainer;
   import flash.display.Loader;
-  import flash.net.URLRequest;
-  import flash.net.URLLoader;
-  import flash.net.URLLoaderDataFormat;
-  import flash.ui.Mouse;
-  import C_Run.ram;
-  import C_Run.initLib;
-  import com.adobe.alchemyvfs.HttpVFS;
-  import Stage3DGL.GLAPI;
+  import flash.display.Sprite;
   import flash.display.Stage3D;
+  import flash.display.StageAlign;
+  import flash.display.StageScaleMode;
   import flash.display3D.Context3D;
   import flash.display3D.Context3DRenderMode;
-  import flash.display.StageAlign;
+  import flash.events.AsyncErrorEvent;
+  import flash.events.Event;
+  import flash.events.EventDispatcher;
+  import flash.events.IOErrorEvent;
+  import flash.events.KeyboardEvent;
+  import flash.events.MouseEvent;
+  import flash.events.ProgressEvent;
+  import flash.events.SampleDataEvent;
+  import flash.events.SecurityErrorEvent;
+  import flash.geom.Rectangle
+  import flash.media.Sound;
+  import flash.media.SoundChannel;
+  import flash.net.LocalConnection;
+  import flash.net.URLLoader;
+  import flash.net.URLLoaderDataFormat;
+  import flash.net.URLRequest;
+  import flash.text.TextField;
+  import flash.ui.Mouse;
+  import flash.utils.ByteArray
+  import flash.utils.ByteArray;
+  import flash.utils.Endian;
   import flash.utils.getTimer;
+  
+  import GLS3D.GLAPI;
+  import C_Run.initLib;
+  import C_Run.ram;
+  import com.adobe.alchemyvfs.HttpVFS;
 
   public class AlcConsole extends Sprite
   {
