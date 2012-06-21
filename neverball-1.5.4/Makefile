@@ -7,7 +7,7 @@ GLS3D:=/path/to/GLS3D
 all:
 	$(MAKE) neverball.swf CC=$(ALCHEMY)/usr/bin/gcc DEBUG=0 ENABLE_NLS=0 \
 		LDFLAGS="-L$(ALCEXTRA)/install/usr/lib/ $(GLS3D)/install/usr/lib/libGL.abc -L$(GLS3D)/install/usr/lib/" \
-		SDL_CPPFLAGS="-I$(ALCEXTRA)/install/usr/include/ -I$(GLS3D)/install/usr/include -I$(ALCHEMY)/usr/include/libpng15 -I$(ALCHEMY)/usr/include/SDL -I$(ALCEXTRA)/install/usr/include/SDL" \
+		SDL_CPPFLAGS="-I$(ALCEXTRA)/install/usr/include/ -I$(GLS3D)/install/usr/include -I$(ALCEXTRA)/install/usr/include -I$(ALCHEMY)/usr/include/libpng15 -I$(ALCHEMY)/usr/include/SDL -I$(ALCEXTRA)/install/usr/include/SDL" \
 		PNG_CPPFLAGS=" " SDL_LIBS="-lSDL -lvgl " PNG_LIBS=" -lpng "
 
 #------------------------------------------------------------------------------
