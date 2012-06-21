@@ -12,10 +12,20 @@ fakeioctl
 setjmp
 longjmp
 strlen
+getenv
+__udivdi3
+__umoddi3
+__umuldi3
+__muldi3
+errno
 
 __avm2_vgl_argb_buffer
 vgl_cur_mx
 vgl_cur_my
-vgl_cur_mbuttons
+vgl_cur_buttons
+
 engineTick
 engineTickSound
+mainLoopTick
+audio_step
+audioBuffer

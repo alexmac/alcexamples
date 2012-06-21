@@ -356,6 +356,7 @@ AlcConsole.abc: AlcConsole.as $(ALCHEMY)/usr/share/HttpVFS.as
 	AlcConsole.as -outdir . -out AlcConsole
 
 $(BALL_TARG) : $(BALL_OBJS) AlcConsole.abc
+	# -flto-api=exports.txt 
 	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) -symbol-abc=AlcConsole.abc -jvmopt=-Xmx4G -emit-swf -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
