@@ -87,7 +87,7 @@ package com.adobe.alchemy
   public class AlcConsole extends Sprite
   {
     public static var current:AlcConsole;
-    private var enableConsole:Boolean = false;
+    private var enableConsole:Boolean = true;
     private static var _width:int = 1024;
     private static var _height:int = 768;
     private var bm:Bitmap
@@ -174,6 +174,7 @@ package com.adobe.alchemy
 
     private function runMain(event:Event):void
     {
+      CModule.getVFS().setConsole(this);
       CModule.getVFS().addBackingStore(zfs, null);
 
       this.removeEventListener(Event.ENTER_FRAME, runMain);
@@ -181,6 +182,7 @@ package com.adobe.alchemy
       var argv:Vector.<String> = new Vector.<String>();
       argv.push("/data/neverball.swf");
       initLib(this, argv);
+      trace("initlib run");
       vbufferptr = CModule.read32(CModule.getPublicSym("__avm2_vgl_argb_buffer"))
       vgl_mx = CModule.getPublicSym("vgl_cur_mx");
       vgl_my = CModule.getPublicSym("vgl_cur_my");
@@ -195,6 +197,7 @@ package com.adobe.alchemy
     public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int
     {
       var str:String = CModule.readString(buf, nbyte);
+      trace("write: " + str)
       i_write(str);
       return nbyte;
     }
@@ -256,11 +259,11 @@ package com.adobe.alchemy
 
     public function consoleWrite(s:String):void
     {
+      trace(s);
       if(enableConsole) {
         _tf.appendText(s);
         _tf.scrollV = _tf.maxScrollV
       }
-      trace(s);
     }
 
     public function i_exit(code:int):void

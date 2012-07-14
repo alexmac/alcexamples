@@ -110,6 +110,8 @@ fs_file fs_open(const char *path, const char *mode)
 {
     fs_file fh;
 
+    fprintf(stderr, "fsopen: %s\n", path);
+
     assert((mode[0] == 'r' && !mode[1]) ||
            (mode[0] == 'w' && (!mode[1] || mode[1] == '+')));
 
@@ -163,7 +165,7 @@ int fs_close(fs_file fh)
 {
 	int result;
 	
-	/*fprintf(stderr, "fs_close for path: %s\n", fh->path);*/
+	fprintf(stderr, "fs_close for path: %s\n", fh->path);
 	result = fclose(fh->handle);
 	free(fh);
 	return result;
@@ -542,6 +544,8 @@ void *fs_load(const char *path, int *datalen)
 
         fs_close(fh);
     }
+
+    fprintf(stderr, "fsload: %s %p\n", path, data);
 
     return data;
 }

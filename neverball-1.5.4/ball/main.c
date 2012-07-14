@@ -458,6 +458,9 @@ int main(int argc, char *argv[])
 	FlashPlayer event loop (so we don't hang in here as main() 
 	is called from within the FlashPlayer event loop).
 	 */
+
+fprintf(stderr, "main...\n");
+AS3_Trace("as3 main");
 	
 	
 	/*
@@ -466,7 +469,7 @@ int main(int argc, char *argv[])
 	The code in AclConsole.as will take care of calling the 
 	factored out game loop code by calling mainLoopTick() periodically.
 	*/
-    AS3_LibInit();
+    AS3_GoAsync();
 #endif
 
     while (loop())

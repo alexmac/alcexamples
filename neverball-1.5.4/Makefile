@@ -73,7 +73,7 @@ ifeq ($(ENABLE_WII),1)
 
     ALL_CFLAGS := -Wall -std=c99 -pedantic -fms-extensions $(CFLAGS)
 else
-    ALL_CFLAGS := -Wall -ansi -pedantic $(CFLAGS)
+    ALL_CFLAGS := -Wall $(CFLAGS)
 endif
 
 # Preprocessor...
@@ -323,7 +323,7 @@ DESKTOPS := $(basename $(wildcard dist/*.desktop.in))
 
 maps: sols
 
-AlcConsole.abc: AlcConsole.as $(ALCHEMY)/usr/share/HttpVFS.as
+AlcConsole.abc: AlcConsole.as
 	mkdir -p vfs
 	rm -f *.zip
 	cd data1 && zip -9 -q -r ../data1.zip *
@@ -331,7 +331,7 @@ AlcConsole.abc: AlcConsole.as $(ALCHEMY)/usr/share/HttpVFS.as
 	cd data3 && zip -9 -q -r ../data3.zip *
 
 	java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
-	-abcfuture -AS3 -strict -optimize \
+	-abcfuture -AS3 -strict \
 	-import $(ALCHEMY)/usr/lib/builtin.abc \
 	-import $(ALCHEMY)/usr/lib/playerglobal.abc \
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
@@ -344,7 +344,7 @@ AlcConsole.abc: AlcConsole.as $(ALCHEMY)/usr/share/HttpVFS.as
 	python $(ALCHEMY)/usr/bin/swfdink.py -v 16 VFSPreLoader.swf
 
 	java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
-	-abcfuture -AS3 -strict -optimize \
+	-abcfuture -AS3 -strict \
 	-import $(ALCHEMY)/usr/lib/builtin.abc \
 	-import $(ALCHEMY)/usr/lib/playerglobal.abc \
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
@@ -357,7 +357,7 @@ AlcConsole.abc: AlcConsole.as $(ALCHEMY)/usr/share/HttpVFS.as
 
 $(BALL_TARG) : $(BALL_OBJS) AlcConsole.abc
 	# -flto-api=exports.txt 
-	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) -symbol-abc=AlcConsole.abc -jvmopt=-Xmx4G -emit-swf -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
+	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) -symbol-abc=AlcConsole.abc -jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
 	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) -emit-swf $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)

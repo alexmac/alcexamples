@@ -1,5 +1,4 @@
-*.[od]
-*.desktop
+*.d
 *.swf
 *.abc
 *.zip
