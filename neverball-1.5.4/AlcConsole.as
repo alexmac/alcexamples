@@ -31,7 +31,7 @@ package com.adobe.alchemy
   import flash.utils.getTimer;
   
   import GLS3D.GLAPI;
-  import C_Run.initLib;
+  import com.adobe.alchemy.CModule;
   import C_Run.ram;
   import com.adobe.alchemyvfs.InMemoryBackingStore;
   import nochump.util.zip.*
@@ -181,7 +181,7 @@ package com.adobe.alchemy
 
       var argv:Vector.<String> = new Vector.<String>();
       argv.push("/data/neverball.swf");
-      initLib(this, argv);
+      CModule.initLib(this, argv);
       trace("initlib run");
       vbufferptr = CModule.read32(CModule.getPublicSym("__avm2_vgl_argb_buffer"))
       vgl_mx = CModule.getPublicSym("vgl_cur_mx");

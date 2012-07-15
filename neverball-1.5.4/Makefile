@@ -337,7 +337,6 @@ AlcConsole.abc: AlcConsole.as
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
 	-import $(ALCHEMY)/usr/lib/CModule.abc \
 	-import $(ALCHEMY)/usr/lib/C_Run.abc \
-	-import $(ALCHEMY)/usr/lib/initLib.abc \
 	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
 	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
 	VFSPreLoader.as -swf VFSPreLoader,1024,768,60 -outdir . -out VFSPreLoader
@@ -350,7 +349,6 @@ AlcConsole.abc: AlcConsole.as
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
 	-import $(ALCHEMY)/usr/lib/CModule.abc \
 	-import $(ALCHEMY)/usr/lib/C_Run.abc \
-	-import $(ALCHEMY)/usr/lib/initLib.abc \
 	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
 	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
 	AlcConsole.as -outdir . -out AlcConsole
