@@ -1,4 +1,4 @@
-package com.adobe.alchemy
+package flascc
 {
   import flash.display.Bitmap
   import flash.display.BitmapData
@@ -18,7 +18,7 @@ package com.adobe.alchemy
   import flash.utils.ByteArray
 
   import C_Run.ram;
-  import com.adobe.alchemyvfs.*;  
+  import flascc.vfs.*;  
   
 
   /**
@@ -26,19 +26,17 @@ package com.adobe.alchemy
   * The PlayerPosix class delegates to this for things like read/write
   * so that console output can be displayed in a TextField on the Stage.
   */
-  public class AlcConsole extends Sprite
+  public class Console extends Sprite implements ISpecialFile
   {
     private static const _height:int = 768 + 100;
     private static const _width:int = 1024;
 
-    public static var current:AlcConsole;
     public var mx:int = 0, my:int = 0;
     public var sndDataBuffer:ByteArray = null
 
     private var _tf:TextField;
     private var bm:Bitmap
     private var enableConsole:Boolean = true
-    private var runningInWorker:Boolean = false;
     private var frameCount:int = 0;
     private var enginetickptr:int, engineticksoundptr:int
     private var inputContainer
@@ -51,29 +49,37 @@ package com.adobe.alchemy
     private var vbuffer:int, vgl_mx:int, vgl_my:int, kp:int
     private const emptyArgs:Vector.<int> = new Vector.<int>;
 
-    public function AlcConsole(container:DisplayObjectContainer = null)
+    public function Console(container:DisplayObjectContainer = null)
     {
-      AlcConsole.current = this;
+      CModule.rootSprite = container ? container.root : this
+      
+      trace("Console!");
+      
       if(container) {
-        container.addChild(this);
-        initG(null);
+        container.addChild(this)
+        init(null)
       } else {
-        addEventListener(Event.ADDED_TO_STAGE, initG);
+        addEventListener(Event.ADDED_TO_STAGE, init)
       }
     }
 
-    private function initG(e:Event):void
+    /**
+    * All of the real flascc init happens in this method
+    * which is either run on startup or once the SWF has
+    * been added to the stage.
+    */
+    private function init(e:Event):void
     {
       inputContainer = new Sprite()
       addChild(inputContainer)
 
+      addEventListener(Event.ENTER_FRAME, enterFrame)
+
       stage.addEventListener(KeyboardEvent.KEY_DOWN, bufferKeyDown);
       stage.addEventListener(KeyboardEvent.KEY_UP, bufferKeyUp);
       stage.addEventListener(MouseEvent.MOUSE_MOVE, bufferMouseMove);
-      stage.frameRate = 60;
-      stage.scaleMode = StageScaleMode.NO_SCALE;
-      graphics.lineStyle(1, 0xe0e0e0);
-      graphics.drawRect(0, 0, _width, _height);
+      stage.frameRate = 60
+      stage.scaleMode = StageScaleMode.NO_SCALE
       bmd = new BitmapData(1024,768)
       bm = new Bitmap(bmd)
       bmr = new Rectangle(0,0,bmd.width, bmd.height)
@@ -81,48 +87,43 @@ package com.adobe.alchemy
       inputContainer.addChild(bm)
       
       if(enableConsole) {
-      _tf = new TextField;
-      _tf.multiline = true;
-      _tf.width = _width;
-      _tf.height = _height;
-      inputContainer.addChild(_tf);
+        _tf = new TextField
+        _tf.multiline = true
+        _tf.width = stage.stageWidth
+        _tf.height = stage.stageHeight 
+        inputContainer.addChild(_tf)
       }
 
-      addEventListener(Event.ENTER_FRAME, framebufferBlit);
-
-      //CModule.getVFS().addBackingStore(new RootFSBackingStore(), null);
       try
       {
-        CModule.getVFS().setConsole(this);
+        CModule.vfs.console = this;
 
-        // change to false to prevent running main in the background
-        // when Workers are supported
-        var ns:Namespace = new Namespace("C_Run")
-        runningInWorker = ns::workerClass
+        trace("start!!");
 
-        if(runningInWorker)
-          CModule.bgStart(new <String>["-bgworker"], new <String>[], this)
-        else
-          ns::initLib(this)
+        CModule.startBackground(
+              this,
+              new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE"],
+              new <String>[])
+
+        trace("started!!");
       }
       catch(e:*)
       {
-        i_error(e.toString() + "\n" + e.getStackTrace().toString());
-        throw e;
+        // If main gives any exceptions make sure we get a full stack trace
+        // in our console
+        consoleWrite(e.toString() + "\n" + e.getStackTrace().toString())
+        throw e
       }
       vbuffer = CModule.getPublicSym("__avm2_vgl_argb_buffer")
       vgl_mx = CModule.getPublicSym("vgl_cur_mx")
       vgl_my = CModule.getPublicSym("vgl_cur_my")
-      //enginetickptr = CModule.getPublicSym("engineTick")
-        
-      //initTesting();
     }
 
     public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int
     {
-      var str:String = CModule.readString(buf, nbyte);
-      i_write(str);
-      return nbyte;
+      var str:String = CModule.readString(buf, nbyte)
+      consoleWrite(str)
+      return nbyte
     }
 
     public function read(fd:int, buf:int, nbyte:int, errno_ptr:int):int
@@ -155,28 +156,17 @@ package com.adobe.alchemy
       keybytes.writeByte(int(ke.keyCode | 0x80))
     }
 
-    public function consoleWrite(s:String):void
+    /**
+    * Helper function that traces to the flashlog text file and also
+    * displays output in the on-screen textfield console.
+    */
+    private function consoleWrite(s:String):void
     {
+      trace(s)
       if(enableConsole) {
-        _tf.appendText(s);
+        _tf.appendText(s)
         _tf.scrollV = _tf.maxScrollV
       }
-      trace(s);
-    }
-
-    public function i_exit(code:int):void
-    {
-      consoleWrite("\nexit code: " + code + "\n");
-    }
-
-    public function i_error(e:String):void
-    {
-       consoleWrite("\nexception: " + e + "\n");
-    }
-
-    public function i_write(str:String):void
-    {
-      consoleWrite(str);
     }
 
     public function sndComplete(e:Event):void
@@ -201,18 +191,17 @@ package com.adobe.alchemy
         CModule.callFun(engineticksoundptr, emptyArgs)
     }
 
-    public function framebufferBlit(e:Event):void
+    public function enterFrame(e:Event):void
     {
-      if(runningInWorker) {
         // Background worker handles blitting
         CModule.uiTick();
         if(vbuffer == 0)
           vbuffer = CModule.getPublicSym("__avm2_vgl_argb_buffer")
-      } else {
-        CModule.write32(vgl_mx, mx)
-        CModule.write32(vgl_my, my)
-        CModule.callFun(enginetickptr, emptyArgs)
-      }
+     // } else {
+     //   CModule.write32(vgl_mx, mx)
+     //   CModule.write32(vgl_my, my)
+     //   CModule.callFun(enginetickptr, emptyArgs)
+     // }
 
       ram.position = CModule.read32(vbuffer)
       if (ram.position != 0) {
