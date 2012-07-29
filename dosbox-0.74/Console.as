@@ -193,6 +193,7 @@ package flascc
 
     public function enterFrame(e:Event):void
     {
+      trace("enterframe!");
         // Background worker handles blitting
         CModule.uiTick();
         if(vbuffer == 0)

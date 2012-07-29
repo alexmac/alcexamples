@@ -31,7 +31,7 @@ package
     import flash.net.URLRequest;
     import flash.net.URLLoader;
     import flash.net.URLLoaderDataFormat;
-    import nochump.util.zip.*;
+    import flascc.vfs.zip.*;
 
 	public class VFSPreLoader extends MovieClip
 	{	
@@ -160,7 +160,7 @@ package
                 return;
 
             if(datazips.length > 0) {
-                var f = childDomain.getDefinition("com.adobe.alchemy.addVFSZip");
+                var f = childDomain.getDefinition("flascc.addVFSZip");
                 f(datazips.pop());
                 return;
             }

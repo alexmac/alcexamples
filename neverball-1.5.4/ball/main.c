@@ -17,7 +17,7 @@
 #include <SDL.h>
 #include <stdio.h>
 #include <string.h>
-#include <AS3.h>
+#include <AS3/AS3.h>
 
 #include "glext.h"
 #include "config.h"
@@ -458,10 +458,6 @@ int main(int argc, char *argv[])
 	FlashPlayer event loop (so we don't hang in here as main() 
 	is called from within the FlashPlayer event loop).
 	 */
-
-fprintf(stderr, "main...\n");
-AS3_Trace("as3 main");
-	
 	
 	/*
 	Here we throw an exception so that we can break the control

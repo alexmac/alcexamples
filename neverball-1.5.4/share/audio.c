@@ -13,7 +13,7 @@
  */
 
 #include <SDL.h>
-#include <AS3.h>
+#include <AS3/AS3.h>
 
 #include <vorbis/codec.h>
 #include <vorbis/vorbisfile.h>
@@ -360,8 +360,6 @@ void audio_music_play(const char *filename)
 
         SDL_LockAudio();
         {
-        	inline_as3("trace('Calling voice_init() from audio_music_play() on: ' + CModule.readString(%0, %1));\n"
-        			   : : "r"(filename), "r"(strlen(filename)));
             if ((music = voice_init(filename, 0.0f)))
             {
                 music->loop = 1;

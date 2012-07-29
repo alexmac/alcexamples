@@ -57,7 +57,7 @@ ifeq ($(DEBUG),1)
 #    CFLAGS   := -g -O0
     CPPFLAGS :=
 else
-    CFLAGS   := -O4 -falcon
+    CFLAGS   := -O4 -asc
     CPPFLAGS := -DNDEBUG
 endif
 
@@ -323,7 +323,7 @@ DESKTOPS := $(basename $(wildcard dist/*.desktop.in))
 
 maps: sols
 
-AlcConsole.abc: AlcConsole.as
+Console.abc: Console.as
 	mkdir -p vfs
 	rm -f *.zip
 	cd data1 && zip -9 -q -r ../data1.zip *
@@ -331,31 +331,40 @@ AlcConsole.abc: AlcConsole.as
 	cd data3 && zip -9 -q -r ../data3.zip *
 
 	java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
-	-abcfuture -AS3 -strict \
+	-abcfuture -AS3 -strict -optimize \
 	-import $(ALCHEMY)/usr/lib/builtin.abc \
 	-import $(ALCHEMY)/usr/lib/playerglobal.abc \
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
+	-import $(ALCHEMY)/usr/lib/ISpecialFile.abc \
+	-import $(ALCHEMY)/usr/lib/IBackingStore.abc \
+	-import $(ALCHEMY)/usr/lib/IBackingStoreManager.abc \
 	-import $(ALCHEMY)/usr/lib/CModule.abc \
 	-import $(ALCHEMY)/usr/lib/C_Run.abc \
 	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
 	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
+	-import $(ALCHEMY)/usr/lib/AlcVFSZip.abc \
 	VFSPreLoader.as -swf VFSPreLoader,1024,768,60 -outdir . -out VFSPreLoader
 	python $(ALCHEMY)/usr/bin/swfdink.py -v 16 VFSPreLoader.swf
 
 	java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
-	-abcfuture -AS3 -strict \
+	-abcfuture -AS3 -strict -optimize \
 	-import $(ALCHEMY)/usr/lib/builtin.abc \
 	-import $(ALCHEMY)/usr/lib/playerglobal.abc \
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
+	-import $(ALCHEMY)/usr/lib/ISpecialFile.abc \
+	-import $(ALCHEMY)/usr/lib/IBackingStore.abc \
+	-import $(ALCHEMY)/usr/lib/IBackingStoreManager.abc \
+	-import $(ALCHEMY)/usr/lib/InMemoryBackingStore.abc \
+	-import $(ALCHEMY)/usr/lib/AlcVFSZip.abc \
 	-import $(ALCHEMY)/usr/lib/CModule.abc \
 	-import $(ALCHEMY)/usr/lib/C_Run.abc \
 	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
 	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
-	AlcConsole.as -outdir . -out AlcConsole
+	Console.as -outdir . -out Console
 
-$(BALL_TARG) : $(BALL_OBJS) AlcConsole.abc
+$(BALL_TARG) : $(BALL_OBJS) Console.abc
 	# -flto-api=exports.txt 
-	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) -symbol-abc=AlcConsole.abc -jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
+	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) -symbol-abc=Console.abc -jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
 	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) -emit-swf $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)
@@ -390,7 +399,7 @@ clean : clean-src
 #	$(RM) $(SOLS)
 	$(RM) $(DESKTOPS)
 	$(MAKE) -C po clean
-	rm -f AlcConsole.abc
+	rm -f Console.abc
 
 test : all
 	./neverball
