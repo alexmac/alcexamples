@@ -110,8 +110,6 @@ fs_file fs_open(const char *path, const char *mode)
 {
     fs_file fh;
 
-    fprintf(stderr, "fsopen: %s\n", path);
-
     assert((mode[0] == 'r' && !mode[1]) ||
            (mode[0] == 'w' && (!mode[1] || mode[1] == '+')));
 
@@ -151,7 +149,7 @@ fs_file fs_open(const char *path, const char *mode)
 		}
 		else
         {
-		    fprintf(stderr, "I can't open file: %s with mode %s\n", path, mode);
+		    //fprintf(stderr, "I can't open file: %s with mode %s\n", path, mode);
             free(fh);
             fh = NULL;
         }		
@@ -165,7 +163,6 @@ int fs_close(fs_file fh)
 {
 	int result;
 	
-	fprintf(stderr, "fs_close for path: %s\n", fh->path);
 	result = fclose(fh->handle);
 	free(fh);
 	return result;

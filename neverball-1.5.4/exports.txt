@@ -18,6 +18,7 @@ __umoddi3
 __umuldi3
 __muldi3
 errno
+alc_uiTickProc
 
 __avm2_vgl_argb_buffer
 vgl_cur_mx

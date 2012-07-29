@@ -94,6 +94,7 @@ package flascc
     */
     public function Console(container:DisplayObjectContainer = null)
     {
+      trace("console");
       current = this;
       CModule.rootSprite = container ? container.root : this
       addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
@@ -109,6 +110,7 @@ package flascc
 
     public function onAddedToStage(e:Event):void
     {
+      trace("on stage");
       inputContainer = new Sprite()
       addChild(inputContainer)
 
@@ -130,6 +132,7 @@ package flascc
 
   private function context_created(e:Event):void
   {
+    trace("ctx!")
       _context = _stage.context3D;
       _context.configureBackBuffer(_width, _height, 4, true /*enableDepthAndStencil*/ );
       _context.enableErrorChecking = false;

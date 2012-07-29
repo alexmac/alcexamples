@@ -342,7 +342,6 @@ Console.abc: Console.as
 	-import $(ALCHEMY)/usr/lib/C_Run.abc \
 	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
 	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
-	-import $(ALCHEMY)/usr/lib/AlcVFSZip.abc \
 	VFSPreLoader.as -swf VFSPreLoader,1024,768,60 -outdir . -out VFSPreLoader
 	python $(ALCHEMY)/usr/bin/swfdink.py -v 16 VFSPreLoader.swf
 
@@ -363,8 +362,7 @@ Console.abc: Console.as
 	Console.as -outdir . -out Console
 
 $(BALL_TARG) : $(BALL_OBJS) Console.abc
-	# -flto-api=exports.txt 
-	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) -symbol-abc=Console.abc -jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
+	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) $(ALCHEMY)/usr/lib/AlcVFSZip.abc -flto-api=exports.txt -no-swf-preloader -swf-version=16 -symbol-abc=Console.abc -jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
 	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) -emit-swf $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)

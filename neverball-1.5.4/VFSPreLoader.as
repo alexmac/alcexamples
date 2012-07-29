@@ -31,11 +31,9 @@ package
     import flash.net.URLRequest;
     import flash.net.URLLoader;
     import flash.net.URLLoaderDataFormat;
-    import flascc.vfs.zip.*;
 
 	public class VFSPreLoader extends MovieClip
-	{	
-		var progress:TextField
+	{
         var loader:Loader
         var params
         var fail = false
@@ -50,26 +48,8 @@ package
           addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         }
 
-        public function setStatus(s:String)
-        {
-            if(!fail)
-                progress.text = s
-        }
-
         private function onAddedToStage(e:*)
         {
-            trace("VFSPreLoader")
-            var fmt:TextFormat = new TextFormat();
-            fmt.size = 24;
-            fmt.align = TextFormatAlign.CENTER;
-
-            progress = new TextField()
-            progress.defaultTextFormat = fmt;
-			progress.x = 0
-			progress.y = 350
-			progress.width = 1024
-			progress.height = 100
-            addChild(progress)
             stage.frameRate = 60
 
             var datazip1 = new URLLoader(new URLRequest("data1.zip"));
@@ -113,46 +93,62 @@ package
 
         private function onProgress1(e:ProgressEvent):void {
             p1 = uint(e.bytesLoaded / e.bytesTotal * 100)
-            setStatus("Downloading " + uint((p1+p2+p3+p4) / 4) + "%")
+            render()
         }
 
         private function onProgress2(e:ProgressEvent):void {
             p2 = uint(e.bytesLoaded / e.bytesTotal * 100)
-            setStatus("Downloading " + uint((p1+p2+p3+p4) / 4) + "%")
+            render()
         }
 
         private function onProgress3(e:ProgressEvent):void {
             p3 = uint(e.bytesLoaded / e.bytesTotal * 100)
-            setStatus("Downloading " + uint((p1+p2+p3+p4) / 4) + "%")
+            render()
         }
 
         private function onComplete(e:Event):void {
             datazips.push(e.target.data);
             if(datazips.length == 3)
                 this.addEventListener(Event.ENTER_FRAME, enterFrame);
+            render()
         }
 
-        private function startLoad():void {
-            try {
-            } catch (e:Error) {
-                setStatus("Threw error " + e)
-                fail = true
-            }
+        private function render():void {
+            graphics.clear()
+            graphics.beginFill(0)
+            graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight)
+            graphics.endFill()
+
+            var pct:Number = ((p1+p2+p3+p4) / 4.0) / 100.0
+
+            var barColor = fail ? 0xFF0000 : 0xFFFFFF;
+
+            // progress bar
+            var barHeight:int = 40
+            var barWidth:int = stage.stageWidth * 0.75
+
+            graphics.lineStyle(1, barColor)
+            graphics.drawRect((stage.stageWidth - barWidth) / 2, (stage.stageHeight/2) - (barHeight/2), barWidth, barHeight)
+
+            graphics.beginFill(barColor)
+            graphics.drawRect((stage.stageWidth - barWidth) / 2 + 5, (stage.stageHeight/2) - (barHeight/2) + 5, (barWidth - 10) * pct, barHeight - 10)
+            graphics.endFill()
         }
 
         private function onEngineProgress(e:ProgressEvent):void {
             p4 = uint(e.bytesLoaded / e.bytesTotal * 100)
-            setStatus("Downloading " + uint((p1+p2+p3+p4) / 4) + "%")
+            render()
         }
 
         private function onEngineComplete(e:Event):void {
             engineLoaded = true;
+            render()
         }
 
         private function onError(e:Event):void
         {
-            setStatus("Error:" + e)
             fail = true
+            render()
         }
 
         private function enterFrame(e:Event):void {
@@ -166,7 +162,7 @@ package
             }
 
             this.removeEventListener(Event.ENTER_FRAME, enterFrame);
-            removeChild(progress)
+            graphics.clear()
             stage.addChild(loader)
         }
 	}
