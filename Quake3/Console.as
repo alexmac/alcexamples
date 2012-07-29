@@ -1,4 +1,4 @@
-package com.adobe.alchemy
+package flascc
 {
   import flash.display.Bitmap
   import flash.display.BitmapData
@@ -34,13 +34,12 @@ package com.adobe.alchemy
   import flash.utils.getTimer;
   
   import GLS3D.GLAPI;
-  import C_Run.initLib;
   import C_Run.ram;
-  import com.adobe.alchemyvfs.HttpVFS;
+  import flascc.vfs.ISpecialFile;
 
-  public class AlcConsole extends Sprite
+  public class Console extends Sprite implements ISpecialFile
   {
-    public static var current:AlcConsole;
+    public static var current:Console;
     private var enableConsole:Boolean = false;
     private static var _width:int = 1024;
     private static var _height:int = 768;
@@ -59,24 +58,32 @@ package com.adobe.alchemy
     private var _stage:Stage3D;
     private var _context:Context3D;
     private var rendered:Boolean = false;
-    private var vfs:HttpVFS;
     private var running:Boolean = false;
 
-    public function AlcConsole(container:DisplayObjectContainer = null)
+    /**
+    * A basic implementation of a console for flascc apps.
+    * The PlayerPosix class delegates to this for things like read/write
+    * so that console output can be displayed in a TextField on the Stage.
+    */
+    public function Console(container:DisplayObjectContainer = null)
     {
-      AlcConsole.current = this;
-      stage.frameRate = 60;
-      vfs = new HttpVFS();
-      vfs.addEventListener(Event.COMPLETE, vfsloaded);
-    }
-    
-    public function vfsloaded(e:*):void
-    {
-      CModule.getVFS().addBackingStore(vfs, null)
-      initG(null);
+      CModule.rootSprite = container ? container.root : this
+      current = this;
+      
+      if(container) {
+        container.addChild(this)
+        init(null)
+      } else {
+        addEventListener(Event.ADDED_TO_STAGE, init)
+      }
     }
 
-    private function initG(e:Event):void
+    /**
+    * All of the real flascc init happens in this method
+    * which is either run on startup or once the SWF has
+    * been added to the stage.
+    */
+    protected function init(e:Event):void
     {
       inputContainer = new Sprite()
       addChild(inputContainer)
@@ -142,35 +149,41 @@ package com.adobe.alchemy
     private function runMain(event:Event):void
     {
       this.removeEventListener(Event.ENTER_FRAME, runMain);
-
-      initLib(this);
-      vbufferptr = CModule.read32(CModule.getPublicSym("__avm2_vgl_argb_buffer"))
-      vgl_mx = CModule.getPublicSym("vgl_cur_mx");
-      vgl_my = CModule.getPublicSym("vgl_cur_my");
-      vgl_buttons = CModule.getPublicSym("vgl_cur_buttons");
-      mainloopTickPtr = CModule.getPublicSym("engineTick");
-      //resizePtr = CModule.getPublicSym("engineResizeWindow");
-       soundUpdatePtr = CModule.getPublicSym("engineTickSound");
-      audioBufferPtr = CModule.getPublicSym("audioBuffer");
+      CModule.vfs.console = this
+      CModule.startAsync(this)
+      vbufferptr = CModule.read32(CModule.getPublicSymbol("__avm2_vgl_argb_buffer"))
+      vgl_mx = CModule.getPublicSymbol("vgl_cur_mx");
+      vgl_my = CModule.getPublicSymbol("vgl_cur_my");
+      vgl_buttons = CModule.getPublicSymbol("vgl_cur_buttons");
+      mainloopTickPtr = CModule.getPublicSymbol("engineTick");
+      //resizePtr = CModule.getPublicSymbol("engineResizeWindow");
+       soundUpdatePtr = CModule.getPublicSymbol("engineTickSound");
+      audioBufferPtr = CModule.getPublicSymbol("audioBuffer");
       addEventListener(Event.ENTER_FRAME, framebufferBlit);
     }
 
-    public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int
+    /**
+    * The PlayerPosix implementation will use this function to handle
+    * C IO write requests to the file "/dev/tty" (e.g. output from
+    * printf will pass through this function). See the ISpecialFile
+    * documentation for more information about the arguments and return value.
+    */
+    public function write(fd:int, bufPtr:int, nbyte:int, errnoPtr:int):int
     {
-      var str:String = CModule.readString(buf, nbyte);
-      i_write(str);
-      return nbyte;
+      var str:String = CModule.readString(bufPtr, nbyte)
+      consoleWrite(str)
+      return nbyte
     }
 
-    public function read(fd:int, buf:int, nbyte:int, errno_ptr:int):int
+    public function read(fd:int, bufPtr:int, nbyte:int, errnoPtr:int):int
     {
       if(fd == 0 && nbyte == 1) {
         keybytes.position = kp++
         if(keybytes.bytesAvailable) {
-          CModule.write8(buf, keybytes.readUnsignedByte())
+          CModule.write8(bufPtr, keybytes.readUnsignedByte())
         } else {
-        keybytes.position = 0
-        kp = 0
+          keybytes.position = 0
+          kp = 0
         }
       }
       return 0
@@ -219,21 +232,6 @@ package com.adobe.alchemy
       trace(s)
     }
 
-    public function i_exit(code:int):void
-    {
-      consoleWrite("\nexit code: " + code + "\n");
-    }
-
-    public function i_error(e:String):void
-    {
-       consoleWrite("\nexception: " + e + "\n");
-    }
-
-    public function i_write(str:String):void
-    {
-      consoleWrite(str);
-    }
-
     public function sndComplete(e:Event):void
     {
       sndChan.removeEventListener(Event.SOUND_COMPLETE, sndComplete);
@@ -243,7 +241,7 @@ package com.adobe.alchemy
 
     public function sndData(e:SampleDataEvent):void
     {
-      CModule.callFun(soundUpdatePtr, new Vector.<int>)
+      CModule.callI(soundUpdatePtr, new Vector.<int>)
       e.data.endian = "littleEndian"
       e.data.length = 0
       var ap:int = CModule.read32(audioBufferPtr)
@@ -259,13 +257,14 @@ package com.adobe.alchemy
 
     public function framebufferBlit(e:Event):void
     {
+      CModule.serviceUIRequests()
       CModule.write32(vgl_mx, mx);
       CModule.write32(vgl_my, my);
       CModule.write32(vgl_buttons, button);
-
-  	  var gl:GLAPI = GLAPI.instance;
+      
+      var gl:GLAPI = GLAPI.instance;
       gl.context.clear(0.0, 0.0, 0.0);
-  	  CModule.callFun(mainloopTickPtr, new Vector.<int>());
+      CModule.callI(mainloopTickPtr, new Vector.<int>());
       running = true;
       //trace("------------ PRESENT ----------------")
       gl.context.present();

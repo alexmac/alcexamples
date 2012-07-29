@@ -30,7 +30,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include <AS3.h>
+#include <AS3/AS3.h>
 
 #ifndef DEDICATED
 #ifdef USE_LOCAL_HEADERS
@@ -638,7 +638,7 @@ int main( int argc, char **argv )
 	signal( SIGTERM, Sys_SigHandler );
 	signal( SIGINT, Sys_SigHandler );
 
-	AS3_LibInit();
+	AS3_GoAsync();
 }
 
 void engineTick()

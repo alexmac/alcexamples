@@ -49,9 +49,9 @@ dosbox:
 		-import $(ALCHEMY)/usr/lib/BinaryData.abc \
 		-import $(ALCHEMY)/usr/lib/ISpecialFile.abc \
 		-import $(ALCHEMY)/usr/lib/IBackingStore.abc \
-       		-import $(ALCHEMY)/usr/lib/IBackingStoreManager.abc \
-       		-import $(ALCHEMY)/usr/lib/InMemoryBackingStore.abc \
-       		dosboxvfs.as -outdir . -out dosboxvfs
+       	-import $(ALCHEMY)/usr/lib/IBackingStoreManager.abc \
+       	-import $(ALCHEMY)/usr/lib/InMemoryBackingStore.abc \
+       	dosboxvfs.as -outdir . -out dosboxvfs
 	
 	cd $(BUILD)/dosbox/ && java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
 	-abcfuture -AS3 -strict -optimize \

@@ -36,7 +36,7 @@ package flascc
 
     private var _tf:TextField;
     private var bm:Bitmap
-    private var enableConsole:Boolean = true
+    private var enableConsole:Boolean = false
     private var frameCount:int = 0;
     private var enginetickptr:int, engineticksoundptr:int
     private var inputContainer
@@ -52,9 +52,7 @@ package flascc
     public function Console(container:DisplayObjectContainer = null)
     {
       CModule.rootSprite = container ? container.root : this
-      
-      trace("Console!");
-      
+ 
       if(container) {
         container.addChild(this)
         init(null)
@@ -98,14 +96,10 @@ package flascc
       {
         CModule.vfs.console = this;
 
-        trace("start!!");
-
         CModule.startBackground(
               this,
               new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE"],
               new <String>[])
-
-        trace("started!!");
       }
       catch(e:*)
       {
@@ -114,9 +108,9 @@ package flascc
         consoleWrite(e.toString() + "\n" + e.getStackTrace().toString())
         throw e
       }
-      vbuffer = CModule.getPublicSym("__avm2_vgl_argb_buffer")
-      vgl_mx = CModule.getPublicSym("vgl_cur_mx")
-      vgl_my = CModule.getPublicSym("vgl_cur_my")
+      vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
+      vgl_mx = CModule.getPublicSymbol("vgl_cur_mx")
+      vgl_my = CModule.getPublicSymbol("vgl_cur_my")
     }
 
     public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int
@@ -185,19 +179,18 @@ package flascc
         return;
 
       if(engineticksoundptr == 0)
-        engineticksoundptr = CModule.getPublicSym("engineTickSound")
+        engineticksoundptr = CModule.getPublicSymbol("engineTickSound")
 
       if(engineticksoundptr)
-        CModule.callFun(engineticksoundptr, emptyArgs)
+        CModule.callI(engineticksoundptr, emptyArgs)
     }
 
     public function enterFrame(e:Event):void
     {
-      trace("enterframe!");
         // Background worker handles blitting
-        CModule.uiTick();
+        CModule.serviceUIRequests();
         if(vbuffer == 0)
-          vbuffer = CModule.getPublicSym("__avm2_vgl_argb_buffer")
+          vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
      // } else {
      //   CModule.write32(vgl_mx, mx)
      //   CModule.write32(vgl_my, my)

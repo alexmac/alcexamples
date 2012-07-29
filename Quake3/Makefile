@@ -276,26 +276,36 @@ q3: $(OBJS)
 
 	$(ALCHEMY)/usr/bin/genfs --type=http $(BUILDDIR)/q3vfs/ "q3vfs/baseq3"
 	mv q3vfs/baseq3_manifest.as $(BUILDDIR)/manifest.as
-	cp -f $(ALCHEMY)/usr/share/HttpVFS.as $(BUILDDIR)/HttpVFS.as
-	cp -f AlcConsole.as $(BUILDDIR)/
+	cp -f $(ALCHEMY)/usr/share/HTTPBackingStore.as $(BUILDDIR)/HTTPBackingStore.as
+	cp -f Console.as $(BUILDDIR)/
 	cd $(BUILDDIR) && $(LINK) -o quake3.bc *.o
 	cd $(BUILDDIR) && $(LLC) -jvmopt=-Xmx2G quake3.bc -filetype=obj -o quake3.abc
 	make q3link
 
 q3link:
 	cd $(BUILDDIR) && java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
+		-abcfuture -AS3 -swf flascc.preloader.DefaultPreLoader,1024,768 \
+		-import $(ALCHEMY)/usr/lib/builtin.abc \
+		-import $(ALCHEMY)/usr/lib/playerglobal.abc \
+		$(ALCHEMY)/usr/share/IBackingStore.as \
+		$(ALCHEMY)/usr/share/InMemoryBackingStore.as \
+		$(ALCHEMY)/usr/share/DefaultPreLoader.as \
+		HttpBackingStore.as -outdir . -out preloader
+	cd $(BUILDDIR) && java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
 		-abcfuture -AS3 -strict -optimize \
 		-import $(ALCHEMY)/usr/lib/builtin.abc \
 		-import $(ALCHEMY)/usr/lib/playerglobal.abc \
 		-import $(GLS3D)/install/usr/lib/libGL.abc \
+		-import $(ALCHEMY)/usr/lib/ISpecialFile.abc \
+		-import $(ALCHEMY)/usr/lib/IBackingStore.abc \
+		-import $(ALCHEMY)/usr/lib/IBackingStoreManager.abc \
 		-import $(ALCHEMY)/usr/lib/CModule.abc \
 		-import $(ALCHEMY)/usr/lib/C_Run.abc \
-		-import $(ALCHEMY)/usr/lib/initLib.abc \
 		-import $(ALCHEMY)/usr/lib/BinaryData.abc \
 		-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
-		HttpVFS.as AlcConsole.as -outdir . -out AlcConsole
+		Console.as -outdir . -out Console
 	cd $(BUILDDIR) && $(CC) $(CFLAGS) quake3.abc $(GLS3D)/install/usr/lib/libGL.abc $(GLS3D)/install/usr/lib/libGL.a -lSDL -lvgl \
-		-Wl,--warn-unresolved-symbols -symbol-abc=AlcConsole.abc -emit-swf -swf-size=1024x768 -o ../Quake3.swf
+		-Wl,--warn-unresolved-symbols -symbol-abc=Console.abc -swf-version=16 -swf-preloader=preloader.swf -emit-swf -swf-size=1024x768 -o ../Quake3.swf
 
 clean:
 	rm -rf $(BUILDDIR) *.swf
