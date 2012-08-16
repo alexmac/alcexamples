@@ -34,13 +34,13 @@ cube2:
 dosbox:
 	mkdir -p $(BUILD)/dosbox
 	
-	#cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O0" CXXFLAGS="-O0 -I$(ALCEXTRA)/usr/include" \
-	#	$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
-	#	--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
+	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O0" CXXFLAGS="-O0 -I$(ALCEXTRA)/usr/include" \
+		$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
+		--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
 	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make
 
-	cd $(BUILD)/dosbox && $(FLASCC)/usr/bin/genfs --type=embed $(SRCROOT)/dosbox-0.74/fs scorch
-	cd $(BUILD)/dosbox && cat scorch*.as > dosboxvfs.as
+	cd $(BUILD)/dosbox && $(FLASCC)/usr/bin/genfs --type=embed $(SRCROOT)/dosbox-0.74/fs dosvfs
+	cd $(BUILD)/dosbox && cat dosvfs*.as > dosboxvfs.as
 
 	cd $(BUILD)/dosbox && java -Xmx4000M -classpath $(FLASCC)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
 		-abcfuture -AS3 -strict \
@@ -76,4 +76,4 @@ dosbox:
 		-lSDL -lm -lvgl -lpng -lz \
 		-swf-size=1024x768 \
 		-symbol-abc=Console.abc \
-		-emit-swf -swf-version=17 -no-swf-preloader -o dosbox.swf
+		-emit-swf -swf-version=18 -no-swf-preloader -o dosbox.swf
