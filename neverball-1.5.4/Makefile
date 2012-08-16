@@ -1,13 +1,13 @@
 
 #------------------------------------------------------------------------------
 # Default target (careful, this is recursive)
-ALCEXTRA:=/path/to/alchemyextra
+ALCEXTRA:=/path/to/FLASCCextra
 GLS3D:=/path/to/GLS3D
 
 all:
-	$(MAKE) neverball.swf CC=$(ALCHEMY)/usr/bin/gcc DEBUG=0 ENABLE_NLS=0 \
+	$(MAKE) neverball.swf CC=$(FLASCC)/usr/bin/gcc DEBUG=0 ENABLE_NLS=0 \
 		LDFLAGS="-L$(ALCEXTRA)/install/usr/lib/ $(GLS3D)/install/usr/lib/libGL.abc -L$(GLS3D)/install/usr/lib/" \
-		SDL_CPPFLAGS="-I$(ALCEXTRA)/install/usr/include/ -I$(GLS3D)/install/usr/include -I$(ALCEXTRA)/install/usr/include -I$(ALCHEMY)/usr/include/libpng15 -I$(ALCHEMY)/usr/include/SDL -I$(ALCEXTRA)/install/usr/include/SDL" \
+		SDL_CPPFLAGS="-I$(ALCEXTRA)/install/usr/include/ -I$(GLS3D)/install/usr/include -I$(ALCEXTRA)/install/usr/include -I$(FLASCC)/usr/include/libpng15 -I$(FLASCC)/usr/include/SDL -I$(ALCEXTRA)/install/usr/include/SDL" \
 		PNG_CPPFLAGS=" " SDL_LIBS="-lSDL -lvgl " PNG_LIBS=" -lpng "
 
 #------------------------------------------------------------------------------
@@ -57,7 +57,7 @@ ifeq ($(DEBUG),1)
 #    CFLAGS   := -g -O0
     CPPFLAGS :=
 else
-    CFLAGS   := -O4 -asc
+    CFLAGS   := -O4
     CPPFLAGS := -DNDEBUG
 endif
 
@@ -78,8 +78,8 @@ endif
 
 # Preprocessor...
 
-SDL_CPPFLAGS := $(shell sdl-config --cflags) -U_GNU_SOURCE
-PNG_CPPFLAGS := $(shell libpng-config --cflags)
+SDL_CPPFLAGS := $(shell $(FLASCC)/usr/bin/sdl-config --cflags) -U_GNU_SOURCE
+PNG_CPPFLAGS := $(shell $(FLASCC)/usr/bin/libpng-config --cflags)
 
 ALL_CPPFLAGS := $(SDL_CPPFLAGS) $(PNG_CPPFLAGS) -Ishare \
     -DVERSION=\"$(VERSION)\"
@@ -108,8 +108,8 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 #------------------------------------------------------------------------------
 # Libraries
 
-SDL_LIBS := $(shell sdl-config --libs)
-PNG_LIBS := $(shell libpng-config --libs)
+SDL_LIBS := $(shell $(FLASCC)/usr/bin/sdl-config --libs)
+PNG_LIBS := $(shell $(FLASCC)/usr/bin/libpng-config --libs)
 FS_LIBS := -lphysfs
 
 # The  non-conditionalised values  below  are specific  to the  native
@@ -330,39 +330,41 @@ Console.abc: Console.as
 	cd data2 && zip -9 -q -r ../data2.zip *
 	cd data3 && zip -9 -q -r ../data3.zip *
 
-	java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
+	java -classpath $(FLASCC)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
 	-abcfuture -AS3 -strict -optimize \
-	-import $(ALCHEMY)/usr/lib/builtin.abc \
-	-import $(ALCHEMY)/usr/lib/playerglobal.abc \
+	-import $(FLASCC)/usr/lib/builtin.abc \
+	-import $(FLASCC)/usr/lib/playerglobal.abc \
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
-	-import $(ALCHEMY)/usr/lib/ISpecialFile.abc \
-	-import $(ALCHEMY)/usr/lib/IBackingStore.abc \
-	-import $(ALCHEMY)/usr/lib/IBackingStoreManager.abc \
-	-import $(ALCHEMY)/usr/lib/CModule.abc \
-	-import $(ALCHEMY)/usr/lib/C_Run.abc \
-	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
-	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
+	-import $(FLASCC)/usr/lib/ISpecialFile.abc \
+	-import $(FLASCC)/usr/lib/IBackingStore.abc \
+	-import $(FLASCC)/usr/lib/IVFS.abc \
+	-import $(FLASCC)/usr/lib/CModule.abc \
+	-import $(FLASCC)/usr/lib/C_Run.abc \
+	-import $(FLASCC)/usr/lib/BinaryData.abc \
+	-import $(FLASCC)/usr/lib/PlayerKernel.abc \
 	VFSPreLoader.as -swf VFSPreLoader,1024,768,60 -outdir . -out VFSPreLoader
-	python $(ALCHEMY)/usr/bin/swfdink.py -v 16 VFSPreLoader.swf
+	python $(FLASCC)/usr/bin/swfdink.py -v 17 VFSPreLoader.swf
 
-	java -classpath $(ALCHEMY)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
+	java -classpath $(FLASCC)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
 	-abcfuture -AS3 -strict -optimize \
-	-import $(ALCHEMY)/usr/lib/builtin.abc \
-	-import $(ALCHEMY)/usr/lib/playerglobal.abc \
+	-import $(FLASCC)/usr/lib/builtin.abc \
+	-import $(FLASCC)/usr/lib/playerglobal.abc \
 	-import $(GLS3D)/install/usr/lib/libGL.abc \
-	-import $(ALCHEMY)/usr/lib/ISpecialFile.abc \
-	-import $(ALCHEMY)/usr/lib/IBackingStore.abc \
-	-import $(ALCHEMY)/usr/lib/IBackingStoreManager.abc \
-	-import $(ALCHEMY)/usr/lib/InMemoryBackingStore.abc \
-	-import $(ALCHEMY)/usr/lib/AlcVFSZip.abc \
-	-import $(ALCHEMY)/usr/lib/CModule.abc \
-	-import $(ALCHEMY)/usr/lib/C_Run.abc \
-	-import $(ALCHEMY)/usr/lib/BinaryData.abc \
-	-import $(ALCHEMY)/usr/lib/PlayerPosix.abc \
+	-import $(FLASCC)/usr/lib/ISpecialFile.abc \
+	-import $(FLASCC)/usr/lib/IBackingStore.abc \
+	-import $(FLASCC)/usr/lib/IVFS.abc \
+	-import $(FLASCC)/usr/lib/InMemoryBackingStore.abc \
+	-import $(FLASCC)/usr/lib/AlcVFSZip.abc \
+	-import $(FLASCC)/usr/lib/CModule.abc \
+	-import $(FLASCC)/usr/lib/C_Run.abc \
+	-import $(FLASCC)/usr/lib/BinaryData.abc \
+	-import $(FLASCC)/usr/lib/PlayerKernel.abc \
 	Console.as -outdir . -out Console
 
 $(BALL_TARG) : $(BALL_OBJS) Console.abc
-	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) $(ALCHEMY)/usr/lib/AlcVFSZip.abc -flto-api=exports.txt -no-swf-preloader -swf-version=16 -symbol-abc=Console.abc -jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
+	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) $(FLASCC)/usr/lib/AlcVFSZip.abc \
+		-flto-api=exports.txt -no-swf-preloader -swf-version=17 -symbol-abc=Console.abc \
+		-jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
 	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) -emit-swf $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)

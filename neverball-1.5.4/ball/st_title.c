@@ -124,7 +124,7 @@ static int title_action(int i)
         if (strcmp(queue, keyphrase) == 0)
         {
             config_set_cheat();
-            gui_set_label(play_id, sgettext("menu^Cheat"));
+            gui_set_label(play_id, sgettext("menu^Play"));
             gui_pulse(play_id, 1.2f);
         }
         else if (config_cheat())
@@ -158,7 +158,7 @@ static int title_enter(void)
             if ((kd = gui_varray(jd)))
             {
                 if (config_cheat())
-                    play_id = gui_start(kd, sgettext("menu^Cheat"),
+                    play_id = gui_start(kd, sgettext("menu^Play"),
                                         GUI_MED, TITLE_PLAY, 1);
                 else
                     play_id = gui_start(kd, sgettext("menu^Play"),

@@ -22,6 +22,8 @@
 #define _GNU_SOURCE
 #endif
 
+ #include <AS3/AS3.h>
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -1664,10 +1666,13 @@ static void erasemapperfile() {
 	exit(0);
 }
 
-
+extern "C" int VGL_disable_pump_events;
 
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
+
+	VGL_disable_pump_events = 0;
+
 	try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);

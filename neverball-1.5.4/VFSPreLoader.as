@@ -156,7 +156,7 @@ package
                 return;
 
             if(datazips.length > 0) {
-                var f = childDomain.getDefinition("flascc.addVFSZip");
+                var f = childDomain.getDefinition("com.adobe.flascc.addVFSZip");
                 f(datazips.pop());
                 return;
             }

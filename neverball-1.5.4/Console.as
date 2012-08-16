@@ -1,13 +1,14 @@
-package flascc
+package com.adobe.flascc
 {
-  import flash.display.Bitmap
-  import flash.display.BitmapData
+  import flash.display.Bitmap;
+  import flash.display.BitmapData;
   import flash.display.DisplayObjectContainer;
   import flash.display.Sprite;
   import flash.display.Stage3D;
   import flash.display.StageAlign;
   import flash.display.StageScaleMode;
   import flash.display3D.Context3D;
+  import flash.display3D.Context3DProfile;
   import flash.display3D.Context3DRenderMode;
   import flash.events.AsyncErrorEvent;
   import flash.events.Event;
@@ -18,7 +19,7 @@ package flascc
   import flash.events.ProgressEvent;
   import flash.events.SampleDataEvent;
   import flash.events.SecurityErrorEvent;
-  import flash.geom.Rectangle
+  import flash.geom.Rectangle;
   import flash.media.Sound;
   import flash.media.SoundChannel;
   import flash.net.LocalConnection;
@@ -27,36 +28,37 @@ package flascc
   import flash.net.URLRequest;
   import flash.text.TextField;
   import flash.ui.Keyboard;
-  import flash.utils.ByteArray
+  import flash.utils.ByteArray;
+  import flash.utils.Endian;
   import flash.utils.getTimer;
   
-  import GLS3D.GLAPI;
   import C_Run.ram;
-  import flascc.CModule;
-  import flascc.vfs.ISpecialFile;
-  import flascc.vfs.InMemoryBackingStore;
-  import flascc.vfs.zip.*
+  import com.adobe.flascc.CModule;
+  import com.adobe.flascc.vfs.InMemoryBackingStore;
+  import com.adobe.flascc.vfs.ISpecialFile;
+  import com.adobe.flascc.vfs.zip.*;
+  import GLS3D.GLAPI;
 
-    class ZipBackingStore extends InMemoryBackingStore {
-      public function ZipBackingStore()
-      {
-      }
+  class ZipBackingStore extends InMemoryBackingStore {
+    public function ZipBackingStore()
+    {
+    }
 
-      public function addZip(data:ByteArray) {
-        var zip = new ZipFile(data)
-        for (var i = 0; i < zip.entries.length; i++) {
-          var e = zip.entries[i]
-          if (e.isDirectory()) {
-            addDirectory("/"+e.name)
-          } else {
-            addFile("/"+e.name, zip.getInput(e))
-            trace(e.name)
-          }
+    public function addZip(data:ByteArray) {
+      var zip = new ZipFile(data)
+      for (var i = 0; i < zip.entries.length; i++) {
+        var e = zip.entries[i]
+        if (e.isDirectory()) {
+          addDirectory("/"+e.name)
+        } else {
+          addFile("/"+e.name, zip.getInput(e))
+          trace(e.name)
         }
       }
     }
+  }
 
-    var zfs:ZipBackingStore = new ZipBackingStore();
+  var zfs:ZipBackingStore = new ZipBackingStore();
   public function addVFSZip(x:*) {
     if(!zfs) {
       zfs = new ZipBackingStore();
@@ -66,7 +68,7 @@ package flascc
 
   /**
   * A basic implementation of a console for flascc apps.
-  * The PlayerPosix class delegates to this for things like read/write
+  * The PlayerKernel class delegates to this for things like read/write
   * so that console output can be displayed in a TextField on the Stage.
   */
   public class Console extends Sprite implements ISpecialFile
@@ -76,7 +78,7 @@ package flascc
     private static var _height:int = 768;
     private var bm:Bitmap
     private var bmd:BitmapData
-    private var vbufferptr:int, vgl_mx:int, vgl_my:int, kp:int, vgl_buttons:int;
+    private var vgl_mx:int, vgl_my:int, kp:int, vgl_buttons:int;
     private var mainloopTickPtr:int, soundUpdatePtr:int, audioBufferPtr:int;
     private var inputContainer
     private var keybytes:ByteArray = new ByteArray()
@@ -84,9 +86,11 @@ package flascc
     private var snd:Sound = null
     private var sndChan:SoundChannel = null
     public var sndDataBuffer:ByteArray = null
-    private var _stage:Stage3D;
-    private var _context:Context3D;
+    private var s3d:Stage3D;
+    private var ctx3d:Context3D;
     private var rendered:Boolean = false;
+    private var inited:Boolean = false
+    private var emptyVec:Vector.<int> = new Vector.<int>()
 
     /**
     * To Support the preloader case you might want to have the Console
@@ -94,91 +98,94 @@ package flascc
     */
     public function Console(container:DisplayObjectContainer = null)
     {
-      trace("console");
       current = this;
       CModule.rootSprite = container ? container.root : this
-      addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+      
+      if(container) {
+        container.addChild(this)
+        init(null)
+      } else {
+        addEventListener(Event.ADDED_TO_STAGE, init)
+      }
     }
 
-    private function onError(e:Event):void
+    /**
+    * All of the real flascc init happens in this method
+    * which is either run on startup or once the SWF has
+    * been added to the stage.
+    */
+    protected function init(e:Event):void
     {
-    }
-
-    private function onProgress(e:Event):void
-    {
-    }
-
-    public function onAddedToStage(e:Event):void
-    {
-      trace("on stage");
       inputContainer = new Sprite()
       addChild(inputContainer)
 
+      stage.frameRate = 60;
       stage.align = StageAlign.TOP_LEFT;
       stage.scaleMode = StageScaleMode.NO_SCALE;
+      
       stage.addEventListener(KeyboardEvent.KEY_DOWN, bufferKeyDown);
       stage.addEventListener(KeyboardEvent.KEY_UP, bufferKeyUp);
       stage.addEventListener(MouseEvent.MOUSE_MOVE, bufferMouseMove);
       stage.addEventListener(MouseEvent.MOUSE_DOWN, bufferMouseDown);
+      stage.addEventListener(MouseEvent.RIGHT_CLICK, rightClick);
       stage.addEventListener(MouseEvent.MOUSE_UP, bufferMouseUp);
-      stage.frameRate = 60;
-      stage.scaleMode = StageScaleMode.NO_SCALE;
     
-    _stage = stage.stage3Ds[0];
-    _stage.addEventListener(Event.CONTEXT3D_CREATE, context_created);
-    //_stage.requestContext3D(Context3DRenderMode.AUTO);
-    _stage.requestContext3D("auto");
-  }
+      s3d = stage.stage3Ds[0];
+      s3d.addEventListener(Event.CONTEXT3D_CREATE, context_created);
+      try {
+        // If we're in FP 11.4+ this should request a constrained Stage3D context
+        s3d.requestContext3D(Context3DRenderMode.AUTO, Context3DProfile.BASELINE_CONSTRAINED)
+      } catch(e:*) {
+        // If that failed we're in an older FP 11 player so we try for a normal Stage3D context
+        s3d.requestContext3D(Context3DRenderMode.AUTO)
+      }
+    }
 
-  private function context_created(e:Event):void
-  {
-    trace("ctx!")
-      _context = _stage.context3D;
-      _context.configureBackBuffer(_width, _height, 4, true /*enableDepthAndStencil*/ );
-      _context.enableErrorChecking = false;
+    private function rightClick(e:Event):void
+    {
+      // no legacy right click menu! yay!
+    }
+
+    private function context_created(e:Event):void
+    {
+      ctx3d = s3d.context3D
+      ctx3d.configureBackBuffer(_width, _height, 2, true /*enableDepthAndStencil*/ )
+      ctx3d.enableErrorChecking = false;
       
-      trace(_context.driverInfo);
-      GLAPI.init(_context, null, stage);
-          var gl:GLAPI = GLAPI.instance;
-          gl.context.clear(0.0, 0.0, 0.0);
-          gl.context.present();
-          this.addEventListener(Event.ENTER_FRAME, runMain);
-          stage.addEventListener(Event.RESIZE, stageResize);
+      GLAPI.init(ctx3d, null, stage);
+      var gl:GLAPI = GLAPI.instance;
+      gl.context.clear(0.0, 0.0, 0.0);
+      gl.context.present();
+      this.addEventListener(Event.ENTER_FRAME, enterFrame);
+      stage.addEventListener(Event.RESIZE, stageResize);
     }
     
     private function stageResize(event:Event):void
     {
         // need to reconfigure back buffer
-        _width = stage.stageWidth;
-        _height = stage.stageHeight;
-        _context.configureBackBuffer(_width, _height, 4, true /*enableDepthAndStencil*/ );
+        _width = stage.stageWidth
+        _height = stage.stageHeight
+        ctx3d.configureBackBuffer(_width, _height, 2, true /*enableDepthAndStencil*/ )
     }
 
+    /**
+    * The callback to call when flascc code calls the posix exit() function. Leave null to exit silently.
+    * @private
+    */
+    public var exitHook:Function;
 
-    private function runMain(event:Event):void
+    /**
+    * The PlayerKernel implementation will use this function to handle
+    * C process exit requests
+    */
+    public function exit(code:int):Boolean
     {
-      CModule.vfs.console = this
-      CModule.vfs.addBackingStore(zfs, null)
-
-      this.removeEventListener(Event.ENTER_FRAME, runMain);
-
-      var argv:Vector.<String> = new Vector.<String>();
-      argv.push("/data/neverball.swf");
-      CModule.startAsync(this, argv);
-      trace("startAsync run");
-      vbufferptr = CModule.read32(CModule.getPublicSymbol("__avm2_vgl_argb_buffer"))
-      vgl_mx = CModule.getPublicSymbol("vgl_cur_mx");
-      vgl_my = CModule.getPublicSymbol("vgl_cur_my");
-      vgl_buttons = CModule.getPublicSymbol("vgl_cur_buttons");
-
-      mainloopTickPtr = CModule.getPublicSymbol("mainLoopTick");
-      soundUpdatePtr = CModule.getPublicSymbol("audio_step");
-      audioBufferPtr = CModule.getPublicSymbol("audioBuffer");
-      addEventListener(Event.ENTER_FRAME, framebufferBlit);
+      // default to unhandled
+      return exitHook ? exitHook(code) : false;
     }
 
-/**
-    * The PlayerPosix implementation will use this function to handle
+    /**
+    * The PlayerKernel implementation will use this function to handle
     * C IO write requests to the file "/dev/tty" (e.g. output from
     * printf will pass through this function). See the ISpecialFile
     * documentation for more information about the arguments and return value.
@@ -205,6 +212,33 @@ package flascc
       return 0;
     }
 
+    /**
+    * The PlayerKernel implementation will use this function to handle
+    * C fcntl requests to the file "/dev/tty" 
+    * See the ISpecialFile documentation for more information about the
+    * arguments and return value.
+    */
+    public function fcntl(fd:int, com:int, data:int, errnoPtr:int):int
+    {
+      return 0
+    }
+
+    /**
+    * The PlayerKernel implementation will use this function to handle
+    * C ioctl requests to the file "/dev/tty" 
+    * See the ISpecialFile documentation for more information about the
+    * arguments and return value.
+    */
+    public function ioctl(fd:int, com:int, data:int, errnoPtr:int):int
+    {
+      vglttyargs[0] = fd
+      vglttyargs[1] = com
+      vglttyargs[2] = data
+      vglttyargs[3] = errnoPtr
+      return CModule.callI(CModule.getPublicSymbol("vglttyioctl"), vglttyargs);
+    }
+    private var vglttyargs:Vector.<int> = new Vector.<int>()
+
     public function bufferMouseMove(me:MouseEvent) 
     {
       me.stopPropagation();
@@ -227,7 +261,6 @@ package flascc
       my = me.stageY;
       button = 0;
     }
-
 
     public function bufferKeyDown(ke:KeyboardEvent) 
     {
@@ -259,8 +292,8 @@ package flascc
 
     public function sndData(e:SampleDataEvent):void
     {
-      CModule.callI(soundUpdatePtr, new Vector.<int>)
-      e.data.endian = "littleEndian"
+      CModule.callI(soundUpdatePtr, emptyVec)
+      e.data.endian = Endian.LITTLE_ENDIAN
       e.data.length = 0
       var ap:int = CModule.read32(audioBufferPtr)
       //e.data.writeBytes(ram, ap, 16384);
@@ -273,27 +306,59 @@ package flascc
       }
     }
 
-    public function framebufferBlit(e:Event):void
+    /**
+    * The enterFrame callback will be run once every frame. UI thunk requests should be handled
+    * here by calling CModule.serviceUIRequests() (see CModule ASdocs for more information on the UI thunking functionality).
+    */
+    protected function enterFrame(e:Event):void
     {
+      if(!inited) {
+        inited = true
+        CModule.vfs.console = this
+        CModule.vfs.addBackingStore(zfs, null)
+
+        CModule.startAsync(this, new <String>["/data/neverball.swf"])
+
+        vgl_mx = CModule.getPublicSymbol("vgl_cur_mx")
+        vgl_my = CModule.getPublicSymbol("vgl_cur_my")
+        vgl_buttons = CModule.getPublicSymbol("vgl_cur_buttons")
+        mainloopTickPtr = CModule.getPublicSymbol("mainLoopTick")
+        soundUpdatePtr = CModule.getPublicSymbol("audio_step")
+        audioBufferPtr = CModule.getPublicSymbol("audioBuffer")
+      }
+
       CModule.serviceUIRequests()
       CModule.write32(vgl_mx, mx);
       CModule.write32(vgl_my, my);
       CModule.write32(vgl_buttons, button);
 
-      var gl:GLAPI = GLAPI.instance;
-      CModule.callI(mainloopTickPtr, new Vector.<int>());
-      gl.context.present();
+      CModule.callI(mainloopTickPtr, emptyVec);
+      GLAPI.instance.context.present();
 
       if(!snd)
       {
         snd = new Sound();
-        snd.addEventListener( SampleDataEvent.SAMPLE_DATA, sndData );
+        snd.addEventListener(SampleDataEvent.SAMPLE_DATA, sndData);
       }
       if (!sndChan)
       {
         sndChan = snd.play();
         sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete);
       }
+    }
+
+    /**
+    * Provide a way to get the TextField's text.
+    */
+    public function get consoleText():String
+    {
+        var txt:String = null;
+
+        if(_tf != null){
+            txt = _tf.text;
+        }
+        
+        return txt;
     }
   }
 }

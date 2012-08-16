@@ -21,6 +21,7 @@ errno
 alc_uiTickProc
 
 __avm2_vgl_argb_buffer
+vglttyioctl
 vgl_cur_mx
 vgl_cur_my
 vgl_cur_buttons

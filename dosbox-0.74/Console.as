@@ -1,4 +1,4 @@
-package flascc
+package com.adobe.flascc
 {
   import flash.display.Bitmap
   import flash.display.BitmapData
@@ -16,14 +16,16 @@ package flascc
   import flash.net.URLRequest;
   import flash.text.TextField;
   import flash.utils.ByteArray
+  import flash.profiler.Telemetry;
 
   import C_Run.ram;
-  import flascc.vfs.*;  
+  import C_Run.threadArbCondNotifyAll;
+  import com.adobe.flascc.vfs.*;  
   
 
   /**
-  * A basic implementation of a console for Alchemy apps.
-  * The PlayerPosix class delegates to this for things like read/write
+  * A basic implementation of a console for flascc apps.
+  * The PlayerKernel class delegates to this for things like read/write
   * so that console output can be displayed in a TextField on the Stage.
   */
   public class Console extends Sprite implements ISpecialFile
@@ -49,10 +51,14 @@ package flascc
     private var vbuffer:int, vgl_mx:int, vgl_my:int, kp:int
     private const emptyArgs:Vector.<int> = new Vector.<int>;
 
+    /**
+    * To Support the preloader case you might want to have the Console
+    * act as a child of some other DisplayObjectContainer.
+    */
     public function Console(container:DisplayObjectContainer = null)
     {
       CModule.rootSprite = container ? container.root : this
- 
+
       if(container) {
         container.addChild(this)
         init(null)
@@ -66,7 +72,7 @@ package flascc
     * which is either run on startup or once the SWF has
     * been added to the stage.
     */
-    private function init(e:Event):void
+    protected function init(e:Event):void
     {
       inputContainer = new Sprite()
       addChild(inputContainer)
@@ -83,7 +89,7 @@ package flascc
       bmr = new Rectangle(0,0,bmd.width, bmd.height)
       bmd.fillRect(bmd.rect, 0);
       inputContainer.addChild(bm)
-      
+
       if(enableConsole) {
         _tf = new TextField
         _tf.multiline = true
@@ -95,10 +101,11 @@ package flascc
       try
       {
         CModule.vfs.console = this;
+        CModule.vfs.addBackingStore(new com.adobe.flascc.vfs.RootFSBackingStore(), null)
 
-        CModule.startBackground(
-              this,
-              new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE"],
+        CModule.startBackground(this,
+              new <String>["dosbox", "/scorch/SCORCH.EXE", "-cycles=max"],
+              //new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE", "-cycles=max"],
               new <String>[])
       }
       catch(e:*)
@@ -113,25 +120,69 @@ package flascc
       vgl_my = CModule.getPublicSymbol("vgl_cur_my")
     }
 
-    public function write(fd:int, buf:int, nbyte:int, errno_ptr:int):int
+    /**
+    * The callback to call when flascc code calls the posix exit() function. Leave null to exit silently.
+    * @private
+    */
+    public var exitHook:Function;
+
+    /**
+    * The PlayerKernel implementation will use this function to handle
+    * C process exit requests
+    */
+    public function exit(code:int):Boolean
     {
-      var str:String = CModule.readString(buf, nbyte)
+      // default to unhandled
+      return exitHook ? exitHook(code) : false;
+    }
+
+    /**
+    * The PlayerKernel implementation will use this function to handle
+    * C IO write requests to the file "/dev/tty" (e.g. output from
+    * printf will pass through this function). See the ISpecialFile
+    * documentation for more information about the arguments and return value.
+    */
+    public function write(fd:int, bufPtr:int, nbyte:int, errnoPtr:int):int
+    {
+      var str:String = CModule.readString(bufPtr, nbyte)
       consoleWrite(str)
       return nbyte
     }
 
-    public function read(fd:int, buf:int, nbyte:int, errno_ptr:int):int
+    public function read(fd:int, bufPtr:int, nbyte:int, errnoPtr:int):int
     {
       if(fd == 0 && nbyte == 1) {
         keybytes.position = kp++
         if(keybytes.bytesAvailable) {
-          CModule.write8(buf, keybytes.readUnsignedByte())
+          CModule.write8(bufPtr, keybytes.readUnsignedByte())
         } else {
         keybytes.position = 0
         kp = 0
         }
       }
       return 0
+    }
+
+    /**
+    * The PlayerKernel implementation will use this function to handle
+    * C fcntl requests to the file "/dev/tty" 
+    * See the ISpecialFile documentation for more information about the
+    * arguments and return value.
+    */
+    public function fcntl(fd:int, com:int, data:int, errnoPtr:int):int
+    {
+      return 0
+    }
+
+    /**
+    * The PlayerKernel implementation will use this function to handle
+    * C ioctl requests to the file "/dev/tty" 
+    * See the ISpecialFile documentation for more information about the
+    * arguments and return value.
+    */
+    public function ioctl(fd:int, com:int, data:int, errnoPtr:int):int
+    {
+      return CModule.callI(CModule.getPublicSymbol("vglttyioctl"), new <int>[fd, com, data, errnoPtr]);
     }
 
     public function bufferMouseMove(me:MouseEvent) {
@@ -154,7 +205,7 @@ package flascc
     * Helper function that traces to the flashlog text file and also
     * displays output in the on-screen textfield console.
     */
-    private function consoleWrite(s:String):void
+    protected function consoleWrite(s:String):void
     {
       trace(s)
       if(enableConsole) {
@@ -185,22 +236,27 @@ package flascc
         CModule.callI(engineticksoundptr, emptyArgs)
     }
 
-    public function enterFrame(e:Event):void
+    /**
+    * The enterFrame callback will be run once every frame. UI thunk requests should be handled
+    * here by calling CModule.serviceUIRequests() (see CModule ASdocs for more information on the UI thunking functionality).
+    */
+    protected function enterFrame(e:Event):void
     {
         // Background worker handles blitting
+        //try { C_Run.threadArbCondNotifyAll(); } catch(e:*) { Telemetry.sendMetric("threadArbCondNotifyAll FAILED", "true"); }
         CModule.serviceUIRequests();
         if(vbuffer == 0)
           vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
      // } else {
      //   CModule.write32(vgl_mx, mx)
      //   CModule.write32(vgl_my, my)
-     //   CModule.callFun(enginetickptr, emptyArgs)
+     //   CModule.callI(enginetickptr, emptyArgs)
      // }
 
       ram.position = CModule.read32(vbuffer)
       if (ram.position != 0) {
-        frameCount++;
-        bmd.setPixels(bmr, ram);
+        frameCount++
+        bmd.setPixels(bmr, ram)
       }
 
       /*if(!snd)
@@ -213,6 +269,20 @@ package flascc
         sndChan = snd.play();
         sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete);
       }*/
+    }
+
+    /**
+    * Provide a way to get the TextField's text.
+    */
+    public function get consoleText():String
+    {
+        var txt:String = null;
+
+        if(_tf != null){
+            txt = _tf.text;
+        }
+        
+        return txt;
     }
   }
 }

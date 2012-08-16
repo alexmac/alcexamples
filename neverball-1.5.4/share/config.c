@@ -184,7 +184,7 @@ static struct
     { &CONFIG_KEY_RESTART,       "key_restart",       SDLK_r },
     { &CONFIG_KEY_SCORE_NEXT,    "key_score_next",    SDLK_TAB },
     { &CONFIG_KEY_ROTATE_FAST,   "key_rotate_fast",   SDLK_LSHIFT },
-    { &CONFIG_CHEAT,             "cheat",             0 },
+    { &CONFIG_CHEAT,             "play",             0 },
     { &CONFIG_STATS,             "stats",             0 },
     { &CONFIG_UNIFORM,           "uniform",           0 },
     { &CONFIG_SCREENSHOT,        "screenshot",        0 },
