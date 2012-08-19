@@ -52,7 +52,6 @@ package com.adobe.flascc
           addDirectory("/"+e.name)
         } else {
           addFile("/"+e.name, zip.getInput(e))
-          trace(e.name)
         }
       }
     }
@@ -127,7 +126,11 @@ package com.adobe.flascc
       stage.addEventListener(KeyboardEvent.KEY_UP, bufferKeyUp);
       stage.addEventListener(MouseEvent.MOUSE_MOVE, bufferMouseMove);
       stage.addEventListener(MouseEvent.MOUSE_DOWN, bufferMouseDown);
-      stage.addEventListener(MouseEvent.RIGHT_CLICK, rightClick);
+      try {
+        stage.addEventListener(MouseEvent.RIGHT_CLICK, rightClick);
+      } catch(e:*) {
+        // disable the right-click menu if possible
+      }
       stage.addEventListener(MouseEvent.MOUSE_UP, bufferMouseUp);
     
       s3d = stage.stage3Ds[0];
@@ -151,6 +154,12 @@ package com.adobe.flascc
       ctx3d = s3d.context3D
       ctx3d.configureBackBuffer(_width, _height, 2, true /*enableDepthAndStencil*/ )
       ctx3d.enableErrorChecking = false;
+      trace("Stage3D context: " + ctx3d.driverInfo);
+
+      if(ctx3d.driverInfo.indexOf("Software") != -1) {
+          trace("Software mode unsupported...");
+          return;
+      }
       
       GLAPI.init(ctx3d, null, stage);
       var gl:GLAPI = GLAPI.instance;
@@ -345,20 +354,6 @@ package com.adobe.flascc
         sndChan = snd.play();
         sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete);
       }
-    }
-
-    /**
-    * Provide a way to get the TextField's text.
-    */
-    public function get consoleText():String
-    {
-        var txt:String = null;
-
-        if(_tf != null){
-            txt = _tf.text;
-        }
-        
-        return txt;
     }
   }
 }

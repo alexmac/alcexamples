@@ -1671,7 +1671,7 @@ extern "C" int VGL_disable_pump_events;
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 
-	VGL_disable_pump_events = 0;
+	VGL_disable_pump_events = 1;
 
 	try {
 		CommandLine com_line(argc,argv);

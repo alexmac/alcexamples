@@ -104,8 +104,8 @@ package com.adobe.flascc
         CModule.vfs.addBackingStore(new com.adobe.flascc.vfs.RootFSBackingStore(), null)
 
         CModule.startBackground(this,
-              new <String>["dosbox", "/scorch/SCORCH.EXE", "-cycles=max"],
-              //new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE", "-cycles=max"],
+              // new <String>["dosbox", "/scorch/SCORCH.EXE", "-cycles=max"],
+              new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE", "-cycles=max"],
               new <String>[])
       }
       catch(e:*)

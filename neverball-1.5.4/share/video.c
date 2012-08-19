@@ -17,6 +17,7 @@
 #include "glext.h"
 #include "config.h"
 #include "syswm.h"
+#include <AS3/AS3.h>
 
 /*---------------------------------------------------------------------------*/
 

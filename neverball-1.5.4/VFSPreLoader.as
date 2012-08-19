@@ -160,6 +160,8 @@ package
                 f(datazips.pop());
                 return;
             }
+            if(fail == true)
+                return;
 
             this.removeEventListener(Event.ENTER_FRAME, enterFrame);
             graphics.clear()
