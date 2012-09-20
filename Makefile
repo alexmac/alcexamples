@@ -78,8 +78,6 @@ dosbox:
 	
 	make dbfinal
 
-	# -flto-api=$(SRCROOT)/dosbox-0.74/exports.txt \
-
 dbfinal:
 	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O4  -fno-exceptions -pthread dosboxvfs.abc \
 		src/dosbox.o \
@@ -89,4 +87,5 @@ dbfinal:
 		-lSDL -lm -lvgl -lpng -lz \
 		-swf-size=1024x768 \
 		-symbol-abc=Console.abc \
+		-flto-api=$(SRCROOT)/dosbox-0.74/exports.txt \
 		-emit-swf -swf-version=18 -no-swf-preloader -o dosbox.swf

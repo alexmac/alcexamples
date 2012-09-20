@@ -1,4 +1,14 @@
+_Unwind_SjLj_Register
+_Unwind_SjLj_Resume
+_Unwind_SjLj_Unregister
+__avm2_vgl_argb_buffer
+__hack_used
 _start1
+_sync_synchronize
+alc_uiTickProc
+engineTick
+engineTickSound
+free
 main
 malloc
 free
@@ -17,9 +27,13 @@ __udivdi3
 __umoddi3
 __umuldi3
 __muldi3
-errno
-alc_uiTickProc
+__floatdidf
+__divdi3
+__moddi3
+__muldi3
 
+
+errno
 __avm2_vgl_argb_buffer
 vglttyioctl
 vgl_cur_mx
