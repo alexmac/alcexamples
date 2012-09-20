@@ -32,20 +32,20 @@
 
 using namespace std;
 static std::string current_config_dir; // Set by parseconfigfile so Prop_path can use it to construct the realpath
-void Value::destroy() throw(){
+void Value::destroy() {
 	if (type == V_STRING) delete _string;
 }
 
-Value& Value::copy(Value const& in) throw(WrongType) {
+Value& Value::copy(Value const& in) {
 	if (this != &in) { //Selfassigment!
-		if(type != V_NONE && type != in.type) throw WrongType();
+		if(type != V_NONE && type != in.type) exit(42);
 		destroy();
 		plaincopy(in);
 	}
 	return *this;
 }
 
-void Value::plaincopy(Value const& in) throw(){
+void Value::plaincopy(Value const& in) {
 	type = in.type;
 	_int = in._int;
 	_double = in._double;
@@ -54,28 +54,28 @@ void Value::plaincopy(Value const& in) throw(){
 	if(type == V_STRING) _string = new string(*in._string);
 }
 
-Value::operator bool () const throw(WrongType) {
-	if(type != V_BOOL) throw WrongType();
+Value::operator bool () const {
+	if(type != V_BOOL) exit(42);
 	return _bool;
 }
 
-Value::operator Hex () const throw(WrongType) {
-	if(type != V_HEX) throw WrongType();
+Value::operator Hex () const  {
+	if(type != V_HEX) exit(42);
 	return _hex;
 }
 
-Value::operator int () const throw(WrongType) {
-	if(type != V_INT) throw WrongType();
+Value::operator int () const  {
+	if(type != V_INT) exit(42);
 	return _int;
 }
 
-Value::operator double () const throw(WrongType) {
-	if(type != V_DOUBLE) throw WrongType();
+Value::operator double () const  {
+	if(type != V_DOUBLE) exit(42);
 	return _double;
 }
 
-Value::operator char const* () const throw(WrongType) {
-	if(type != V_STRING) throw WrongType();
+Value::operator char const* () const  {
+	if(type != V_STRING) exit(42);
 	return _string->c_str();
 }
 
@@ -104,13 +104,13 @@ bool Value::operator==(Value const& other) {
 	}
 	return false;
 }
-void Value::SetValue(string const& in,Etype _type) throw(WrongType) {
+void Value::SetValue(string const& in,Etype _type)  {
 	/* Throw exception if the current type isn't the wanted type 
 	 * Unless the wanted type is current.
 	 */
-	if(_type == V_CURRENT && type == V_NONE) throw WrongType();
+	if(_type == V_CURRENT && type == V_NONE) exit(42);
 	if(_type != V_CURRENT) { 
-		if(type != V_NONE && type != _type) throw WrongType();
+		if(type != V_NONE && type != _type) exit(42);
 		type = _type;
 	}
 	switch(type){
@@ -134,7 +134,7 @@ void Value::SetValue(string const& in,Etype _type) throw(WrongType) {
 		case V_CURRENT:
 		default:
 			/* Shouldn't happen!/Unhandled */
-			throw WrongType();
+			exit(42);
 			break;
 	}
 }
@@ -811,12 +811,12 @@ bool Config::ParseConfigFile(char const * const configfilename){
 		}
 			break;
 		default:
-			try {
+			/*try {
 				if(currentsection) currentsection->HandleInputline(gegevens);
 			} catch(const char* message) {
 				message=0;
 				//EXIT with message
-			}
+			}*/
 			break;
 		}
 	}

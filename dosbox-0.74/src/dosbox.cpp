@@ -156,7 +156,7 @@ increaseticks:
 		ticksScheduled = 0;
 	} else {
 		Bit32u ticksNew;
-		ticksNew=GetTicks();
+		ticksNew= GetTicks();
 		ticksScheduled += ticksAdded;
 		if (ticksNew > ticksLast) {
 			ticksRemain = ticksNew-ticksLast;
@@ -221,7 +221,7 @@ increaseticks:
 			}
 		} else {
 			ticksAdded = 0;
-			//SDL_Delay(1);
+			SDL_Delay(1);
 			ticksDone -= GetTicks() - ticksNew;
 			if (ticksDone < 0)
 				ticksDone = 0;

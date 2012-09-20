@@ -31,19 +31,27 @@ quake3:
 cube2:
 	cd cube2 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make FLASCC=$(FLASCC) GLS3D=$(GLS3D) ALCEXTRA=$(ALCEXTRA) BASEQ3DIR=$(BASEQ3DIR) -j8 client
 
+dbnative:
+	mkdir -p $(BUILD)/dbnative
+	
+	cd $(BUILD)/dbnative/ && CFLAGS="-O3" CXXFLAGS="-O3" \
+			$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
+		--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
+	cd $(BUILD)/dbnative/ && make
+
 dosbox:
 	mkdir -p $(BUILD)/dosbox
 	
-	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O4" CXXFLAGS="-O4 -I$(ALCEXTRA)/usr/include" \
-			$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
-		--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
+	#cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O4 -fno-exceptions -DDISABLE_JOYSTICK=1 " CXXFLAGS="-O4 -fno-exceptions -DDISABLE_JOYSTICK=1 -I$(ALCEXTRA)/usr/include" \
+	#		$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
+	#	--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
 	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make
 
 	cd $(BUILD)/dosbox && $(FLASCC)/usr/bin/genfs --type=embed $(SRCROOT)/dosbox-0.74/fs dosvfs
 	cd $(BUILD)/dosbox && cat dosvfs*.as > dosboxvfs.as
 
-	cd $(BUILD)/dosbox && java -Xmx4000M -classpath $(FLASCC)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
-		-abcfuture -AS3 -strict \
+	cd $(BUILD)/dosbox && java -Xmx4000M -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
+		-AS3 -strict \
 		-import $(FLASCC)/usr/lib/builtin.abc \
 		-import $(FLASCC)/usr/lib/playerglobal.abc \
 		-import $(FLASCC)/usr/lib/BinaryData.abc \
@@ -53,8 +61,8 @@ dosbox:
        	-import $(FLASCC)/usr/lib/InMemoryBackingStore.abc \
        	dosboxvfs.as -outdir . -out dosboxvfs
 	
-	cd $(BUILD)/dosbox/ && java -classpath $(FLASCC)/usr/lib/asc.jar macromedia.asc.embedding.ScriptCompiler \
-	-abcfuture -AS3 -strict -optimize \
+	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
+	-AS3 -strict -optimize \
 	-import $(FLASCC)/usr/lib/builtin.abc \
 	-import $(FLASCC)/usr/lib/playerglobal.abc \
 	-import $(FLASCC)/usr/lib/ISpecialFile.abc \
@@ -67,8 +75,13 @@ dosbox:
 	-import $(FLASCC)/usr/lib/PlayerKernel.abc \
 	-import dosboxvfs.abc \
 	$(SRCROOT)/dosbox-0.74/Console.as -outdir . -out Console
+	
+	make dbfinal
 
-	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O0 -pthread dosboxvfs.abc \
+	# -flto-api=$(SRCROOT)/dosbox-0.74/exports.txt \
+
+dbfinal:
+	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O4  -fno-exceptions -pthread dosboxvfs.abc \
 		src/dosbox.o \
 		src/cpu/libcpu.a src/debug/libdebug.a src/dos/libdos.a src/fpu/libfpu.a  \
 		src/hardware/libhardware.a src/gui/libgui.a src/ints/libints.a \

@@ -938,28 +938,28 @@ void DOS_Shell::CMD_SUBST (char * args) {
 	localDrive* ldp=0;
 	char mountstring[DOS_PATHLENGTH+CROSS_LEN+20];
 	char temp_str[2] = { 0,0 };
-	try {
+	/*try*/ {
 		strcpy(mountstring,"MOUNT ");
 		StripSpaces(args);
 		std::string arg;
 		CommandLine command(0,args);
 
-		if (command.GetCount() != 2) throw 0 ;
+		if (command.GetCount() != 2) ::exit(43);
 		command.FindCommand(2,arg);
-		if((arg=="/D" ) || (arg=="/d")) throw 1; //No removal (one day)
+		if((arg=="/D" ) || (arg=="/d")) ::exit(43);
   
 		command.FindCommand(1,arg);
-		if( (arg.size()>1) && arg[1] !=':')  throw(0);
+		if( (arg.size()>1) && arg[1] !=':')  ::exit(43);
 		temp_str[0]=(char)toupper(args[0]);
-		if(Drives[temp_str[0]-'A'] ) throw 0; //targetdrive in use
+		if(Drives[temp_str[0]-'A'] ) ::exit(43);
 		strcat(mountstring,temp_str);
 		strcat(mountstring," ");
 
 		command.FindCommand(2,arg);
    		Bit8u drive;char fulldir[DOS_PATHLENGTH];
-		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) throw 0;
+		if (!DOS_MakeName(const_cast<char*>(arg.c_str()),fulldir,&drive)) ::exit(43);
 	
-		if( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) throw 0;
+		if( ( ldp=dynamic_cast<localDrive*>(Drives[drive])) == 0 ) ::exit(43);
 		char newname[CROSS_LEN];   
 		strcpy(newname, ldp->basedir);	   
 		strcat(newname,fulldir);
@@ -970,7 +970,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 		strcat(mountstring,"\"");	   
 		this->ParseLine(mountstring);
 	}
-	catch(int a){
+	/*catch(int a){
 		if(a == 0) {
 			WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
 		} else {
@@ -981,7 +981,7 @@ void DOS_Shell::CMD_SUBST (char * args) {
 	catch(...) {		//dynamic cast failed =>so no localdrive
 		WriteOut(MSG_Get("SHELL_CMD_SUBST_FAILURE"));
 		return;
-	}
+	}*/
    
 	return;
 }

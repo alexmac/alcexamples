@@ -24,7 +24,18 @@
 
 #define PIT_TICK_RATE 1193182
 
-#define GetTicks() SDL_GetTicks()
+#ifdef __AVM2__
+#include <AS3/AS3.h>
+int GetTicks () __attribute__ ((weak));
+
+int GetTicks() {
+	int ticks;
+	inline_as3("import flash.utils.getTimer; %0 = getTimer();" : "=r"(ticks));
+	return ticks;
+}
+#else
+#define GetTicks SDL_GetTicks()
+#endif
 
 typedef void (*TIMER_TickHandler)(void);
 

@@ -181,5 +181,6 @@ void E_Exit(const char * format,...) {
 	va_end(msg);
 	strcat(buf,"\n");
 
-	throw(buf);
+	//throw(buf);
+	exit(1);
 }

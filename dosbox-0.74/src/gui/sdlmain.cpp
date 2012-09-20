@@ -22,8 +22,11 @@
 #define _GNU_SOURCE
 #endif
 
+#ifdef __AVM2__
+ extern "C" volatile int dosboxcurrenttick=-1;
  #include <AS3/AS3.h>
-
+#endif
+ 
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -54,7 +57,7 @@
 #include "control.h"
 
 #define MAPPERFILE "mapper-" VERSION ".map"
-#define DISABLE_JOYSTICK
+//#define DISABLE_JOYSTICK
 
 #if C_OPENGL
 #include "SDL_opengl.h"
@@ -263,7 +266,7 @@ static void PauseDOSBox(bool pressed) {
 		SDL_WaitEvent(&event);    // since we're not polling, cpu usage drops to 0.
 		switch (event.type) {
 
-			case SDL_QUIT: throw(0); break;
+			case SDL_QUIT: exit(0); break;
 			case SDL_KEYDOWN:   // Must use Pause/Break Key to resume.
 			case SDL_KEYUP:
 			if(event.key.keysym.sym==SDLK_PAUSE) {
@@ -910,7 +913,8 @@ static void GUI_ShutDown(Section * /*sec*/) {
 static void KillSwitch(bool pressed) {
 	if (!pressed)
 		return;
-	throw 1;
+	//throw 1;
+	exit(1);
 }
 
 static void SetPriority(PRIORITY_LEVELS level) {
@@ -1312,6 +1316,7 @@ void GFX_LosingFocus(void) {
 }
 
 void GFX_Events() {
+	#if 0
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
 	static int poll_delay=0;
@@ -1425,6 +1430,7 @@ void GFX_Events() {
 			MAPPER_CheckEvent(&event);
 		}
 	}
+	#endif
 }
 
 #if defined (WIN32)
@@ -1666,14 +1672,18 @@ static void erasemapperfile() {
 	exit(0);
 }
 
+#ifdef __AVM2__
 extern "C" int VGL_disable_pump_events;
+#endif
 
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 
-	VGL_disable_pump_events = 1;
-
-	try {
+	#ifdef __AVM2__
+	VGL_disable_pump_events = 0;
+	#endif
+	
+	//try {
 		CommandLine com_line(argc,argv);
 		Config myconf(&com_line);
 		control=&myconf;
@@ -1872,30 +1882,30 @@ int main(int argc, char* argv[]) {
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */
-	} catch (char * error) {
-		GFX_ShowMsg("Exit to error: %s",error);
-		fflush(NULL);
-		if(sdl.wait_on_error) {
+	//} catch (char * error) {
+	//	GFX_ShowMsg("Exit to error: %s",error);
+	//	fflush(NULL);
+	//	if(sdl.wait_on_error) {
 			//TODO Maybe look for some way to show message in linux?
 #if (C_DEBUG)
-			GFX_ShowMsg("Press enter to continue");
-			fflush(NULL);
-			fgetc(stdin);
+	//		GFX_ShowMsg("Press enter to continue");
+	//		fflush(NULL);
+//			fgetc(stdin);
 #elif defined(WIN32)
-			Sleep(5000);
+	//		Sleep(5000);
 #endif
-		}
+	//	}
 
-	}
-	catch (int){
-		;//nothing pressed killswitch
-	}
-	catch(...){
-		//Force visible mouse to end user. Somehow this sometimes doesn't happen
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
-		SDL_ShowCursor(SDL_ENABLE);
-		throw;//dunno what happened. rethrow for sdl to catch
-	}
+	//}
+	//catch (int){
+	//	;//nothing pressed killswitch
+	//}
+	//catch(...){
+	//	//Force visible mouse to end user. Somehow this sometimes doesn't happen
+	//	SDL_WM_GrabInput(SDL_GRAB_OFF);
+	//	SDL_ShowCursor(SDL_ENABLE);
+	//	throw;//dunno what happened. rethrow for sdl to catch
+	//}
 	//Force visible mouse to end user. Somehow this sometimes doesn't happen
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 	SDL_ShowCursor(SDL_ENABLE);

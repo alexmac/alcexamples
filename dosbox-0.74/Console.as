@@ -15,7 +15,8 @@ package com.adobe.flascc
   import flash.net.LocalConnection;
   import flash.net.URLRequest;
   import flash.text.TextField;
-  import flash.utils.ByteArray
+  import flash.utils.ByteArray;
+  import flash.utils.getTimer;
   import flash.profiler.Telemetry;
 
   import C_Run.ram;
@@ -104,8 +105,8 @@ package com.adobe.flascc
         CModule.vfs.addBackingStore(new com.adobe.flascc.vfs.RootFSBackingStore(), null)
 
         CModule.startBackground(this,
-              // new <String>["dosbox", "/scorch/SCORCH.EXE", "-cycles=max"],
-              new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE", "-cycles=max"],
+              //new <String>["dosbox", "/scorch/SCORCH.EXE", "-cycles=max"],
+              new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE"],
               new <String>[])
       }
       catch(e:*)
@@ -247,6 +248,7 @@ package com.adobe.flascc
         CModule.serviceUIRequests();
         if(vbuffer == 0)
           vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
+
      // } else {
      //   CModule.write32(vgl_mx, mx)
      //   CModule.write32(vgl_my, my)

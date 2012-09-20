@@ -816,7 +816,7 @@ static Bitu Reboot_Handler(void) {
 	LOG_MSG(text);
 	double start = PIC_FullIndex();
 	while((PIC_FullIndex()-start)<3000) CALLBACK_Idle();
-	throw 1;
+	exit(45);
 	return CBRET_NONE;
 }
 
