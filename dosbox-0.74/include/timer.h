@@ -30,7 +30,7 @@ int GetTicks () __attribute__ ((weak));
 
 int GetTicks() {
 	int ticks;
-	inline_as3("import flash.utils.getTimer; %0 = getTimer();" : "=r"(ticks));
+	inline_as3("import flash.utils.getTimer; %0 = flash.utils.getTimer();" : "=r"(ticks));
 	return ticks;
 }
 #else

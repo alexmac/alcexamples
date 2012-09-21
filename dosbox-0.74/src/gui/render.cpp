@@ -34,6 +34,10 @@
 
 #include "render_scalers.h"
 
+#ifdef __AVM2__
+#include <AS3/AS3.h>
+#endif
+
 Render_t render;
 ScalerLineHandler_t RENDER_DrawLine;
 
@@ -233,6 +237,8 @@ void RENDER_EndUpdate( bool abort ) {
 	}
 	render.frameskip.index = (render.frameskip.index + 1) & (RENDER_SKIP_CACHE - 1);
 	render.updating=false;
+
+	
 }
 
 static Bitu MakeAspectTable(Bitu skip,Bitu height,double scaley,Bitu miny) {

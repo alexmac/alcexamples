@@ -42,7 +42,7 @@ dbnative:
 dosbox:
 	mkdir -p $(BUILD)/dosbox
 	
-	#cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O4 -fno-exceptions -DDISABLE_JOYSTICK=1 " CXXFLAGS="-O4 -fno-exceptions -DDISABLE_JOYSTICK=1 -I$(ALCEXTRA)/usr/include" \
+	#cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O0 -fno-exceptions -DDISABLE_JOYSTICK=1 " CXXFLAGS="-O0 -fno-exceptions -DDISABLE_JOYSTICK=1 -I$(ALCEXTRA)/usr/include" \
 	#		$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
 	#	--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
 	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make
@@ -79,7 +79,7 @@ dosbox:
 	make dbfinal
 
 dbfinal:
-	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O4  -fno-exceptions -pthread dosboxvfs.abc \
+	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O0  -fno-exceptions -pthread dosboxvfs.abc \
 		src/dosbox.o \
 		src/cpu/libcpu.a src/debug/libdebug.a src/dos/libdos.a src/fpu/libfpu.a  \
 		src/hardware/libhardware.a src/gui/libgui.a src/ints/libints.a \
@@ -87,5 +87,4 @@ dbfinal:
 		-lSDL -lm -lvgl -lpng -lz \
 		-swf-size=1024x768 \
 		-symbol-abc=Console.abc \
-		-flto-api=$(SRCROOT)/dosbox-0.74/exports.txt \
 		-emit-swf -swf-version=18 -no-swf-preloader -o dosbox.swf

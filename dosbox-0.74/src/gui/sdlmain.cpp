@@ -23,7 +23,6 @@
 #endif
 
 #ifdef __AVM2__
- extern "C" volatile int dosboxcurrenttick=-1;
  #include <AS3/AS3.h>
 #endif
  
@@ -792,6 +791,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			if (rectCount)
 				SDL_UpdateRects( sdl.surface, rectCount, sdl.updateRects );
 		}
+		#ifdef __AVM2__
+			AS3_SendMetricInt("Worker.FrameBoundary", 1);
+		#endif
 		break;
 #if (HAVE_DDRAW_H) && defined(WIN32)
 	case SCREEN_SURFACE_DDRAW:
@@ -811,6 +813,9 @@ void GFX_EndUpdate( const Bit16u *changedLines ) {
 			LOG_MSG("DDRAW:Failed to blit, error %X",ret);
 		}
 		SDL_Flip(sdl.surface);
+		#ifdef __AVM2__
+			AS3_SendMetricInt("Worker.FrameBoundary", 1);
+		#endif
 		break;
 #endif
 	case SCREEN_OVERLAY:
