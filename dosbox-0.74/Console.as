@@ -19,10 +19,28 @@ package com.adobe.flascc
   import flash.utils.getTimer;
   import flash.profiler.Telemetry;
 
-  import C_Run.ram;
-  import C_Run.threadArbCondNotifyAll;
-  import com.adobe.flascc.vfs.*;  
+  import com.adobe.flascc.vfs.InMemoryBackingStore;
+  import com.adobe.flascc.vfs.ISpecialFile;
+  import com.adobe.flascc.vfs.zip.*;
   
+  class ZipBackingStore extends InMemoryBackingStore {
+    public function ZipBackingStore(data:ByteArray)
+    {
+      if(data) addZip(data)
+    }
+
+    public function addZip(data:ByteArray) {
+      var zip = new ZipFile(data)
+      for (var i = 0; i < zip.entries.length; i++) {
+        var e = zip.entries[i]
+        if (e.isDirectory()) {
+          addDirectory("/"+e.name.slice(0, e.name.length-1))
+        } else {
+          addFile("/"+e.name, zip.getInput(e))
+        }
+      }
+    }
+  }
 
   /**
   * A basic implementation of a console for flascc apps.
@@ -49,16 +67,23 @@ package com.adobe.flascc
     private var last_mx:int = 0, last_my:int = 0
     private var snd:Sound = null
     private var sndChan:SoundChannel = null
-    private var vbuffer:int, vgl_mx:int, vgl_my:int, kp:int
+    private var vbuffer:int, vgl_mx:int, vgl_my:int, kp:int, vglkbevent:int
     private const emptyArgs:Vector.<int> = new Vector.<int>;
 
     /**
     * To Support the preloader case you might want to have the Console
     * act as a child of some other DisplayObjectContainer.
     */
-    public function Console(container:DisplayObjectContainer = null)
+    public function Console(container:DisplayObjectContainer = null, webfs:ByteArray = null)
     {
       CModule.rootSprite = container ? container.root : this
+      
+
+      if(CModule.runningAsWorker()) {
+        return;
+      }
+
+      if(webfs) CModule.vfs.addBackingStore(new ZipBackingStore(webfs), null)
 
       if(container) {
         container.addChild(this)
@@ -101,12 +126,10 @@ package com.adobe.flascc
 
       try
       {
-        CModule.vfs.console = this;
-        CModule.vfs.addBackingStore(new com.adobe.flascc.vfs.RootFSBackingStore(), null)
+        CModule.vfs.console = this
 
         CModule.startBackground(this,
-              //new <String>["dosbox", "/scorch/SCORCH.EXE", "-cycles=max"],
-              new <String>["dosbox", "/duke3d_install/DUKE3D/DUKE3D.EXE"],
+              new <String>["dosbox", "/ROOT/RUN.BAT"],
               new <String>[])
       }
       catch(e:*)
@@ -119,6 +142,9 @@ package com.adobe.flascc
       vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
       vgl_mx = CModule.getPublicSymbol("vgl_cur_mx")
       vgl_my = CModule.getPublicSymbol("vgl_cur_my")
+      vglkbevent = CModule.getPublicSymbol("VGLQueueKeyboardEvent")
+      CModule.write32(CModule.getPublicSymbol("VGLUseUnsynchronizedIoctl"), 1)
+      CModule.write32(CModule.getPublicSymbol("VGLUseKeyboardEventQueue"), 1)
     }
 
     /**
@@ -192,14 +218,17 @@ package com.adobe.flascc
       my = me.stageY
     }
 
+    var kbevent:Vector.<int> = new Vector.<int>()
     public function bufferKeyDown(ke:KeyboardEvent) {
       ke.stopPropagation()
-      keybytes.writeByte(int(ke.keyCode & 0x7F))
+      kbevent[0] = int(ke.keyCode & 0x7F)
+      CModule.callI(vglkbevent, kbevent);
     }
     
     public function bufferKeyUp(ke:KeyboardEvent) {
       ke.stopPropagation()
-      keybytes.writeByte(int(ke.keyCode | 0x80))
+      kbevent[0] = int(ke.keyCode | 0x80)
+      CModule.callI(vglkbevent, kbevent);
     }
 
     /**
@@ -243,22 +272,18 @@ package com.adobe.flascc
     */
     protected function enterFrame(e:Event):void
     {
-        // Background worker handles blitting
-        //try { C_Run.threadArbCondNotifyAll(); } catch(e:*) { Telemetry.sendMetric("threadArbCondNotifyAll FAILED", "true"); }
-        CModule.serviceUIRequests();
-        if(vbuffer == 0)
-          vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
+      // Background worker handles blitting
+      CModule.write32(vgl_mx, mx)
+      CModule.write32(vgl_my, my)
+      CModule.serviceUIRequests()
 
-     // } else {
-     //   CModule.write32(vgl_mx, mx)
-     //   CModule.write32(vgl_my, my)
-     //   CModule.callI(enginetickptr, emptyArgs)
-     // }
+      if(vbuffer == 0)
+        vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
 
-      ram.position = CModule.read32(vbuffer)
-      if (ram.position != 0) {
+      CModule.ram.position = CModule.read32(vbuffer)
+      if (CModule.ram.position != 0) {
         frameCount++
-        bmd.setPixels(bmr, ram)
+        bmd.setPixels(bmr, CModule.ram)
       }
 
       /*if(!snd)

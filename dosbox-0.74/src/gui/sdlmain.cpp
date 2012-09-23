@@ -1321,7 +1321,7 @@ void GFX_LosingFocus(void) {
 }
 
 void GFX_Events() {
-	#if 0
+	#ifndef DISABLE_INPUT
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
 	static int poll_delay=0;
@@ -1383,7 +1383,7 @@ void GFX_Events() {
 						SDL_WaitEvent(&ev);
 
 						switch (ev.type) {
-						case SDL_QUIT: throw(0); break; // a bit redundant at linux at least as the active events gets before the quit event.
+						case SDL_QUIT: exit(0); break; // a bit redundant at linux at least as the active events gets before the quit event.
 						case SDL_ACTIVEEVENT:     // wait until we get window focus back
 							if (ev.active.state & (SDL_APPINPUTFOCUS | SDL_APPACTIVE)) {
 								// We've got focus back, so unpause and break out of the loop
@@ -1416,7 +1416,7 @@ void GFX_Events() {
 //			HandleVideoResize(&event.resize);
 			break;
 		case SDL_QUIT:
-			throw(0);
+			exit(0);
 			break;
 		case SDL_VIDEOEXPOSE:
 			if (sdl.draw.callback) sdl.draw.callback( GFX_CallBackRedraw );
@@ -1684,7 +1684,7 @@ extern "C" int VGL_disable_pump_events;
 //extern void UI_Init(void);
 int main(int argc, char* argv[]) {
 
-	#ifdef __AVM2__
+	#ifdef DISABLE_INPUT
 	VGL_disable_pump_events = 0;
 	#endif
 	
@@ -1763,7 +1763,7 @@ int main(int argc, char* argv[]) {
 #if SDL_VERSION_ATLEAST(1, 2, 14)
 	putenv(const_cast<char*>("SDL_DISABLE_LOCK_KEYS=1"));
 #endif
-	if ( SDL_Init( SDL_INIT_VIDEO|SDL_INIT_TIMER
+	if ( SDL_Init( SDL_INIT_AUDIO|SDL_INIT_VIDEO|SDL_INIT_TIMER
 		|SDL_INIT_NOPARACHUTE
 		) < 0 ) E_Exit("Can't init SDL %s",SDL_GetError());
 	sdl.inited = true;

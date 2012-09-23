@@ -47,44 +47,49 @@ dosbox:
 	#	--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
 	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make
 
-	cd $(BUILD)/dosbox && $(FLASCC)/usr/bin/genfs --type=embed $(SRCROOT)/dosbox-0.74/fs dosvfs
-	cd $(BUILD)/dosbox && cat dosvfs*.as > dosboxvfs.as
+	cd $(SRCROOT)/dosbox-0.74/fs && zip -9 -q -r $(BUILD)/dosbox/dosboxvfs.zip *
 
-	cd $(BUILD)/dosbox && java -Xmx4000M -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
-		-AS3 -strict \
+	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
+		-AS3 -strict -optimize \
 		-import $(FLASCC)/usr/lib/builtin.abc \
 		-import $(FLASCC)/usr/lib/playerglobal.abc \
-		-import $(FLASCC)/usr/lib/BinaryData.abc \
 		-import $(FLASCC)/usr/lib/ISpecialFile.abc \
 		-import $(FLASCC)/usr/lib/IBackingStore.abc \
-       	-import $(FLASCC)/usr/lib/IVFS.abc \
-       	-import $(FLASCC)/usr/lib/InMemoryBackingStore.abc \
-       	dosboxvfs.as -outdir . -out dosboxvfs
-	
+		-import $(FLASCC)/usr/lib/InMemoryBackingStore.abc \
+		-import $(FLASCC)/usr/lib/IVFS.abc \
+		-import $(FLASCC)/usr/lib/CModule.abc \
+		-import $(FLASCC)/usr/lib/C_Run.abc \
+		-import $(FLASCC)/usr/lib/BinaryData.abc \
+		-import $(FLASCC)/usr/lib/PlayerKernel.abc \
+		-import $(FLASCC)/usr/lib/AlcVFSZip.abc \
+		-import dosboxvfs.abc \
+		$(SRCROOT)/dosbox-0.74/Console.as -outdir . -out Console
+
 	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
-	-AS3 -strict -optimize \
-	-import $(FLASCC)/usr/lib/builtin.abc \
-	-import $(FLASCC)/usr/lib/playerglobal.abc \
-	-import $(FLASCC)/usr/lib/ISpecialFile.abc \
-	-import $(FLASCC)/usr/lib/IBackingStore.abc \
-	-import $(FLASCC)/usr/lib/InMemoryBackingStore.abc \
-	-import $(FLASCC)/usr/lib/IVFS.abc \
-	-import $(FLASCC)/usr/lib/CModule.abc \
-	-import $(FLASCC)/usr/lib/C_Run.abc \
-	-import $(FLASCC)/usr/lib/BinaryData.abc \
-	-import $(FLASCC)/usr/lib/PlayerKernel.abc \
-	-import dosboxvfs.abc \
-	$(SRCROOT)/dosbox-0.74/Console.as -outdir . -out Console
-	
+		-AS3 -strict -optimize \
+		-import $(FLASCC)/usr/lib/builtin.abc \
+		-import $(FLASCC)/usr/lib/playerglobal.abc \
+		-import $(FLASCC)/usr/lib/ISpecialFile.abc \
+		-import $(FLASCC)/usr/lib/IBackingStore.abc \
+		-import $(FLASCC)/usr/lib/IVFS.abc \
+		-import $(FLASCC)/usr/lib/CModule.abc \
+		-import $(FLASCC)/usr/lib/C_Run.abc \
+		-import $(FLASCC)/usr/lib/BinaryData.abc \
+		-import $(FLASCC)/usr/lib/PlayerKernel.abc \
+		-import Console.abc \
+		$(SRCROOT)/dosbox-0.74/VFSPreLoader.as -swf VFSPreLoader,1024,768,60 -outdir . -out VFSPreLoader
+
 	make dbfinal
 
 dbfinal:
-	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O0  -fno-exceptions -pthread dosboxvfs.abc \
+	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O0  -fno-exceptions -pthread \
 		src/dosbox.o \
+		$(FLASCC)/usr/lib/AlcVFSZip.abc \
 		src/cpu/libcpu.a src/debug/libdebug.a src/dos/libdos.a src/fpu/libfpu.a  \
 		src/hardware/libhardware.a src/gui/libgui.a src/ints/libints.a \
 		src/misc/libmisc.a src/shell/libshell.a src/hardware/serialport/libserial.a src/libs/gui_tk/libgui_tk.a \
 		-lSDL -lm -lvgl -lpng -lz \
 		-swf-size=1024x768 \
 		-symbol-abc=Console.abc \
-		-emit-swf -swf-version=18 -no-swf-preloader -o dosbox.swf
+		-emit-swf -swf-version=18 -swf-preloader=VFSPreLoader.swf -o dosbox.swf
+
