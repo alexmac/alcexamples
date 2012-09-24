@@ -39,10 +39,14 @@ dbnative:
 		--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
 	cd $(BUILD)/dbnative/ && make
 
+#DOSBOX_OPTS:=-O4 -flto-api=$(SRCROOT)/dosbox-0.74/exports.txt -fno-exceptions -DDISABLE_JOYSTICK=1
+DOSBOX_OPTS:=-O0 -fno-exceptions -DDISABLE_JOYSTICK=1
+
+
 dosbox:
 	mkdir -p $(BUILD)/dosbox
-	
-	#cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O0 -fno-exceptions -DDISABLE_JOYSTICK=1 " CXXFLAGS="-O0 -fno-exceptions -DDISABLE_JOYSTICK=1 -I$(ALCEXTRA)/usr/include" \
+
+	#cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="$(DOSBOX_OPTS) " CXXFLAGS="$(DOSBOX_OPTS) -I$(ALCEXTRA)/usr/include" \
 	#		$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
 	#	--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
 	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make
@@ -82,7 +86,7 @@ dosbox:
 	make dbfinal
 
 dbfinal:
-	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ -O0  -fno-exceptions -pthread \
+	cd $(BUILD)/dosbox/ && $(FLASCC)/usr/bin/g++ $(DOSBOX_OPTS) -pthread -save-temps \
 		src/dosbox.o \
 		$(FLASCC)/usr/lib/AlcVFSZip.abc \
 		src/cpu/libcpu.a src/debug/libdebug.a src/dos/libdos.a src/fpu/libfpu.a  \

@@ -31,7 +31,8 @@ __floatdidf
 __divdi3
 __moddi3
 __muldi3
-
+__fixdfdi
+__lshrdi3
 
 errno
 __avm2_vgl_argb_buffer
@@ -40,6 +41,10 @@ vgl_cur_mx
 vgl_cur_my
 vgl_cur_buttons
 vglttyioctl
+
+VGLQueueKeyboardEvent
+VGLUseUnsynchronizedIoctl
+VGLUseKeyboardEventQueue
 
 engineTick
 engineTickSound

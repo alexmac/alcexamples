@@ -286,7 +286,7 @@ package com.adobe.flascc
         bmd.setPixels(bmr, CModule.ram)
       }
 
-      /*if(!snd)
+      if(!snd)
       {
         snd = new Sound();
         snd.addEventListener( SampleDataEvent.SAMPLE_DATA, sndData );
@@ -295,7 +295,7 @@ package com.adobe.flascc
       {
         sndChan = snd.play();
         sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete);
-      }*/
+      }
     }
 
     /**
