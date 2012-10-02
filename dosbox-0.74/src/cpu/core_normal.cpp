@@ -136,7 +136,7 @@ static INLINE Bit32u Fetchd() {
 
 #define EALookupTable (core.ea_table)
 
-Bits CPU_Core_Normal_Run(void) {
+Bits /*__attribute__((flatten))*/ CPU_Core_Normal_Run(void) {
 	while (CPU_Cycles-->0) {
 		LOADIP;
 		core.opcode_index=cpu.code.big*0x200;

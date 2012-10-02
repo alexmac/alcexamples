@@ -277,6 +277,8 @@ package com.adobe.flascc
       CModule.write32(vgl_my, my)
       CModule.serviceUIRequests()
 
+      CModule.callI(CModule.getPublicSymbol("dumpstats"), emptyArgs)
+
       if(vbuffer == 0)
         vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
 

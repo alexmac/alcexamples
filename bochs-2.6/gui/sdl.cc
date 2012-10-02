@@ -19,6 +19,14 @@
 //  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 /////////////////////////////////////////////////////////////////////////
 
+extern "C"
+void  dmalloc_log_stats(void);
+#include <stdio.h>
+void dumpstats() {
+  printf("dumpstats:\n");
+  dmalloc_log_stats();
+}
+
 #define _MULTI_THREAD
 
 // Define BX_PLUGGABLE in files that can be compiled into plugins.  For

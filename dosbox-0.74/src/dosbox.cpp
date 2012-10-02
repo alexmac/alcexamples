@@ -375,7 +375,7 @@ void DOSBOX_Init(void) {
 	Pbool->Set_help("Do aspect correction, if your output method doesn't support scaling this can slow things down!.");
 
 	Pmulti = secprop->Add_multi("scaler",Property::Changeable::Always," ");
-	Pmulti->SetValue("normal2x");
+	Pmulti->SetValue("normal3x");//XXXSEP
 	Pmulti->Set_help("Scaler used to enlarge/enhance low resolution modes.\n"
 	                 "  If 'forced' is appended, then the scaler will be used even if the result might not be desired.");
 	Pstring = Pmulti->GetSection()->Add_string("type",Property::Changeable::Always,"normal2x");
@@ -424,7 +424,7 @@ void DOSBOX_Init(void) {
 
 	const char* cyclest[] = { "auto","fixed","max","%u",0 };
 	Pstring = Pmulti_remain->GetSection()->Add_string("type",Property::Changeable::Always,"auto");
-	Pmulti_remain->SetValue("auto");
+	Pmulti_remain->SetValue("max");//XXXSEP"auto");
 	Pstring->Set_values(cyclest);
 
 	Pstring = Pmulti_remain->GetSection()->Add_string("parameters",Property::Changeable::Always,"");
@@ -458,7 +458,7 @@ void DOSBOX_Init(void) {
 	Pint->Set_values(blocksizes);
 	Pint->Set_help("Mixer block size, larger blocks might help sound stuttering but sound will also be more lagged.");
 
-	Pint = secprop->Add_int("prebuffer",Property::Changeable::OnlyAtStart,20);
+	Pint = secprop->Add_int("prebuffer",Property::Changeable::OnlyAtStart,50);//XXXSEP 20);
 	Pint->SetMinMax(0,100);
 	Pint->Set_help("How many milliseconds of data to keep on top of the blocksize.");
 

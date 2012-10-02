@@ -14,15 +14,103 @@ package com.adobe.flascc
   import flash.media.SoundChannel;
   import flash.net.LocalConnection;
   import flash.net.URLRequest;
+  import flash.profiler.Telemetry;
   import flash.text.TextField;
   import flash.utils.ByteArray;
   import flash.utils.getTimer;
-  import flash.profiler.Telemetry;
+  import flash.utils.setInterval;
 
   import com.adobe.flascc.vfs.InMemoryBackingStore;
   import com.adobe.flascc.vfs.ISpecialFile;
   import com.adobe.flascc.vfs.zip.*;
   
+  class DSPFile implements ISpecialFile {
+    var _snd:Sound;
+    var _sndChan:SoundChannel;
+    var _buf:ByteArray;
+    const _samplePairs:int = 2048;
+
+    public function DSPFile() {
+    }
+    
+    public function sndData(e:SampleDataEvent):void
+    {
+      var samplePairs:int = _samplePairs;
+      _buf.position = 0;
+      while(samplePairs && _buf.bytesAvailable)
+      {
+        var l:Number = _buf.readShort() / 32768.0;
+        var r:Number = _buf.readShort() / 32768.0;
+        e.data.writeFloat(l);
+        e.data.writeFloat(r);
+        samplePairs--;
+      }
+      _buf.length = 0;
+      while(samplePairs)
+      {
+        e.data.writeFloat(0);
+        e.data.writeFloat(0);
+        samplePairs--;
+      }
+    }
+    public function fcntl(fd:int, cmd:int, data:int, errnoPtr:int):int {
+      return 0;
+    }
+    public function ioctl(fd:int, request:int, data:int, errnoPtr:int):int {
+      if(request == int(0x4004500b)) // SNDCTL_DSP_GETFMTS
+      {
+        //0x00000010 AFMT_S16_LE
+        CModule.write32(data, 0x00000010);
+        return 0;
+      }
+      else if(request == int(0xc0045005)) // SNDCTL_DSP_SETFMT
+      {
+        return (CModule.read32(data) == int(0x00000010)) ? 0 : -1;
+      }
+      else if(request == int(0xc0045006)) // SNDCTL_DSP_CHANNELS
+      {
+        CModule.write32(data, 2);
+        return 0;
+      }
+      else if(request == int(0xc0045002)) // SNDCTL_DSP_SPEED
+      {
+        CModule.write32(data, 44100);
+        return 0;
+      }
+      else if(request == int(0xc004500a)) // SNDCTL_DSP_SETFRAGMENT
+      {
+        CModule.write32(data, 0x2000a); // 2 1024 sized frags
+        return 0;
+      }
+      trace("ioctl (ignored: " + request + "; returning -1)");
+      return -1;
+    }
+    public function read(fd:int, buf:int, count:int, errnoPtr:int):int {
+      trace("dsp read (ignoring; returning 0)");
+      return 0;
+    }
+    public function write(fd:int, buf:int, count:int, errnoPtr:int):int {
+      if(!_snd)
+      {
+        _buf = new ByteArray();
+        _buf.endian = "littleEndian";
+        _snd = new Sound();
+        _snd.addEventListener(SampleDataEvent.SAMPLE_DATA, sndData);
+        _sndChan = _snd.play();
+      }
+      if((count + _buf.length) > _samplePairs * 2 * 2)
+      {
+        throw "Sound buffer full";
+      }
+      if(count >= 4)
+      {
+        var ram:ByteArray = CModule.ram;
+        _buf.writeBytes(ram, buf, count & ~3);
+      }
+      return count;
+    }
+  }
+
   class ZipBackingStore extends InMemoryBackingStore {
     public function ZipBackingStore(data:ByteArray)
     {
@@ -53,8 +141,6 @@ package com.adobe.flascc
     private static const _width:int = 1024;
 
     public var mx:int = 0, my:int = 0;
-    public var sndDataBuffer:ByteArray = null
-
     private var _tf:TextField;
     private var bm:Bitmap
     private var enableConsole:Boolean = false
@@ -78,12 +164,14 @@ package com.adobe.flascc
     {
       CModule.rootSprite = container ? container.root : this
       
-
       if(CModule.runningAsWorker()) {
         return;
       }
 
-      if(webfs) CModule.vfs.addBackingStore(new ZipBackingStore(webfs), null)
+      if(webfs)
+        CModule.vfs.addBackingStore(new ZipBackingStore(webfs), null)
+
+      CModule.vfs.addSpecialFile("/dev/dsp", new DSPFile());
 
       if(container) {
         container.addChild(this)
@@ -104,6 +192,7 @@ package com.adobe.flascc
       addChild(inputContainer)
 
       addEventListener(Event.ENTER_FRAME, enterFrame)
+      setInterval(serviceUIRequests, 5);
 
       stage.addEventListener(KeyboardEvent.KEY_DOWN, bufferKeyDown);
       stage.addEventListener(KeyboardEvent.KEY_UP, bufferKeyUp);
@@ -251,19 +340,9 @@ package com.adobe.flascc
       sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete);
     }
 
-    public function sndData(e:SampleDataEvent):void
+    protected function serviceUIRequests():void
     {
-      e.data.length = 0
-      sndDataBuffer = e.data
-
-      if(frameCount == 0)
-        return;
-
-      if(engineticksoundptr == 0)
-        engineticksoundptr = CModule.getPublicSymbol("engineTickSound")
-
-      if(engineticksoundptr)
-        CModule.callI(engineticksoundptr, emptyArgs)
+      CModule.serviceUIRequests()
     }
 
     /**
@@ -275,7 +354,6 @@ package com.adobe.flascc
       // Background worker handles blitting
       CModule.write32(vgl_mx, mx)
       CModule.write32(vgl_my, my)
-      CModule.serviceUIRequests()
 
       if(vbuffer == 0)
         vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")
@@ -284,17 +362,6 @@ package com.adobe.flascc
       if (CModule.ram.position != 0) {
         frameCount++
         bmd.setPixels(bmr, CModule.ram)
-      }
-
-      if(!snd)
-      {
-        snd = new Sound();
-        snd.addEventListener( SampleDataEvent.SAMPLE_DATA, sndData );
-      }
-      if (!sndChan)
-      {
-        sndChan = snd.play();
-        sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete);
       }
     }
 

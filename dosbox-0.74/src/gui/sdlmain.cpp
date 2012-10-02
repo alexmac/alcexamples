@@ -1320,8 +1320,12 @@ void GFX_LosingFocus(void) {
 	MAPPER_LosingFocus();
 }
 
+extern "C" volatile int VGLPendingKeyboardEvents;
+
 void GFX_Events() {
 	#ifndef DISABLE_INPUT
+	if(!VGLPendingKeyboardEvents) //SEP
+		return;
 	SDL_Event event;
 #if defined (REDUCE_JOYSTICK_POLLING)
 	static int poll_delay=0;

@@ -22,6 +22,9 @@ clean:
 	find cube2/ | grep "\.abc$$" | xargs rm -f
 	find cube2/ | grep "\.swf$$" | xargs rm -f
 
+nethack:
+	
+
 neverball:
 	cd neverball-1.5.4 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make FLASCC=$(FLASCC) GLS3D=$(GLS3D) ALCEXTRA=$(ALCEXTRA) -j8
 
@@ -72,7 +75,7 @@ dosbox:
 
 	cd $(SRCROOT)/dosbox-0.74/fs && zip -9 -q -r $(BUILD)/dosbox/dosboxvfs.zip *
 
-	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
+	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
 		-AS3 -strict -optimize \
 		-import $(FLASCC)/usr/lib/builtin.abc \
 		-import $(FLASCC)/usr/lib/playerglobal.abc \
@@ -88,7 +91,7 @@ dosbox:
 		-import dosboxvfs.abc \
 		$(SRCROOT)/dosbox-0.74/Console.as -outdir . -out Console
 
-	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
+	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
 		-AS3 -strict -optimize \
 		-import $(FLASCC)/usr/lib/builtin.abc \
 		-import $(FLASCC)/usr/lib/playerglobal.abc \
