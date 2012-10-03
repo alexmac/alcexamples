@@ -330,7 +330,7 @@ Console.abc: Console.as
 	cd data2 && zip -9 -q -r ../data2.zip *
 	cd data3 && zip -9 -q -r ../data3.zip *
 
-	java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
+	java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
 	-AS3 -strict -optimize \
 	-import $(FLASCC)/usr/lib/builtin.abc \
 	-import $(FLASCC)/usr/lib/playerglobal.abc \
@@ -345,7 +345,7 @@ Console.abc: Console.as
 	VFSPreLoader.as -swf VFSPreLoader,1024,768,60 -outdir . -out VFSPreLoader
 	python $(FLASCC)/usr/bin/swfdink.py -v 17 VFSPreLoader.swf
 
-	java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md \
+	java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
 	-AS3 -strict -optimize \
 	-import $(FLASCC)/usr/lib/builtin.abc \
 	-import $(FLASCC)/usr/lib/playerglobal.abc \
