@@ -364,7 +364,7 @@ Console.abc: Console.as
 $(BALL_TARG) : $(BALL_OBJS) Console.abc
 	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) $(FLASCC)/usr/lib/AlcVFSZip.abc \
 		-flto-api=exports.txt -no-swf-preloader -swf-version=17 -symbol-abc=Console.abc \
-		-jvmopt=-Xmx4G -emit-swf -save-temps -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
+		-jvmopt=-Xmx4G -emit-swf -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
 	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) -emit-swf $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)
