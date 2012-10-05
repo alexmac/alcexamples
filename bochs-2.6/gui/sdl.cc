@@ -23,8 +23,10 @@ extern "C"
 void  dmalloc_log_stats(void);
 #include <stdio.h>
 void dumpstats() {
+  #ifdef __AVM2__
   printf("dumpstats:\n");
   dmalloc_log_stats();
+  #endif
 }
 
 #define _MULTI_THREAD
@@ -282,6 +284,8 @@ DWORD WINAPI DebugGuiThread(LPVOID)
 }
 #endif
 
+extern "C" int VGL_Support_VESA_FULL_1024;
+
 void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
 {
   int i,j;
@@ -313,6 +317,10 @@ void bx_sdl_gui_c::specific_init(int argc, char **argv, unsigned header_bar_y)
     return;
   }
   #endif
+
+#ifdef __AVM2__
+  VGL_Support_VESA_FULL_1024 = 1;
+#endif
 
   flags = SDL_INIT_VIDEO;
 #if BX_SHOW_IPS

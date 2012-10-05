@@ -44,8 +44,8 @@ BOCHS_CFG:=--disable-show-ips --enable-static --disable-plugins --enable-fpu --w
 bochsnative:
 	mkdir -p $(BUILD)/bochsnative
 	
-	cd $(BUILD)/bochsnative/ && CFLAGS="-O3" CXXFLAGS="-O3" \
-			$(SRCROOT)/bochs-2.6/configure $(BOCHS_CFG)
+	#cd $(BUILD)/bochsnative/ && CFLAGS="-O3" CXXFLAGS="-O3" \
+	#		$(SRCROOT)/bochs-2.6/configure $(BOCHS_CFG)
 	cd $(BUILD)/bochsnative/ && FLASCC=$(FLASCC) make
 
 bochs:
@@ -53,8 +53,8 @@ bochs:
 	
 	#cd $(BUILD)/bochs/ && CFLAGS="-O3" CXXFLAGS="-O3" \
 	#		PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="$(BOCHS_OPTS) " CXXFLAGS="$(BOCHS_OPTS) -I$(ALCEXTRA)/usr/include" $(SRCROOT)/bochs-2.6/configure $(BOCHS_CFG)
-	cd $(BUILD)/bochs/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) SWF_LINK_OPTS="-Wl,--warn-unresolved-symbols -pthread -emit-swf -swf-preloader=VFSPreLoader.swf -swf-size=1024x768 -symbol-abc=Console.abc $(FLASCC)/usr/lib/AlcVFSZip.abc" make
-	#mv $(BUILD)/bochs/bochs $(BUILD)/bochs/bochs.swf
+	cd $(BUILD)/bochs/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) SWF_LINK_OPTS="-Wl,--warn-unresolved-symbols -pthread -emit-swf -swf-preloader=VFSPreLoader.swf -swf-size=1024x768 -symbol-abc=Console.abc $(FLASCC)/usr/lib/AlcVFSZip.abc " make
+	mv $(BUILD)/bochs/bochs $(BUILD)/bochs/bochs.swf
 
 
 dbnative:

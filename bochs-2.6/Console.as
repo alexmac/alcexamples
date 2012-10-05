@@ -110,7 +110,7 @@ package com.adobe.flascc
       stage.addEventListener(MouseEvent.MOUSE_MOVE, bufferMouseMove);
       stage.frameRate = 60
       stage.scaleMode = StageScaleMode.NO_SCALE
-      bmd = new BitmapData(1024,768)
+      bmd = new BitmapData(1024,768, false)
       bm = new Bitmap(bmd)
       bmr = new Rectangle(0,0,bmd.width, bmd.height)
       bmd.fillRect(bmd.rect, 0);
@@ -277,7 +277,7 @@ package com.adobe.flascc
       CModule.write32(vgl_my, my)
       CModule.serviceUIRequests()
 
-      CModule.callI(CModule.getPublicSymbol("dumpstats"), emptyArgs)
+      //CModule.callI(CModule.getPublicSymbol("dumpstats"), emptyArgs)
 
       if(vbuffer == 0)
         vbuffer = CModule.getPublicSymbol("__avm2_vgl_argb_buffer")

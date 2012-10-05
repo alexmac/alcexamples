@@ -173,7 +173,7 @@ all: @PRIMARY_TARGET@ @PLUGIN_TARGET@ bximage@EXE@ bxcommit@EXE@ @BUILD_DOCBOOK_
 @EXTERNAL_DEPENDENCY@
 
 ABCs:
-	java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md -AS3 -strict -optimize \
+	java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md -AS3 -strict -optimize \
 		-import $(FLASCC)/usr/lib/builtin.abc \
 		-import $(FLASCC)/usr/lib/playerglobal.abc \
 		-import $(FLASCC)/usr/lib/ISpecialFile.abc \
@@ -188,7 +188,7 @@ ABCs:
 		-import dosboxvfs.abc \
 		@srcdir@/Console.as -outdir . -out Console
 
-	java -jar $(FLASCC)/usr/lib/falcon-asc.jar -merge -md -AS3 -strict -optimize \
+	java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md -AS3 -strict -optimize \
 		-import $(FLASCC)/usr/lib/builtin.abc \
 		-import $(FLASCC)/usr/lib/playerglobal.abc \
 		-import $(FLASCC)/usr/lib/ISpecialFile.abc \
