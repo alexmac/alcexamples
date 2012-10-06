@@ -199,7 +199,7 @@ package com.adobe.flascc
       stage.addEventListener(MouseEvent.MOUSE_MOVE, bufferMouseMove);
       stage.frameRate = 60
       stage.scaleMode = StageScaleMode.NO_SCALE
-      bmd = new BitmapData(1024,768)
+      bmd = new BitmapData(1024,768, false)
       bm = new Bitmap(bmd)
       bmr = new Rectangle(0,0,bmd.width, bmd.height)
       bmd.fillRect(bmd.rect, 0);

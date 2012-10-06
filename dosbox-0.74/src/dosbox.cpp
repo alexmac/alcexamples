@@ -305,6 +305,9 @@ static void DOSBOX_RealInit(Section * sec) {
 	else E_Exit("DOSBOX:Unknown machine type %s",mtype.c_str());
 }
 
+#ifdef __AVM2__
+extern "C" int VGL_Support_VESA_FULL_1024;
+#endif
 
 void DOSBOX_Init(void) {
 	Section_prop * secprop;
@@ -317,6 +320,10 @@ void DOSBOX_Init(void) {
 	Prop_multival_remain* Pmulti_remain;
 
 	SDLNetInited = false;
+
+	#ifdef __AVM2__
+	VGL_Support_VESA_FULL_1024 = 1;
+	#endif
 
 	// Some frequently used option sets
 	const char *rates[] = {  "44100", "48000", "32000","22050", "16000", "11025", "8000", "49716", 0 };

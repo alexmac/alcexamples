@@ -34,12 +34,12 @@ quake3:
 cube2:
 	cd cube2 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make FLASCC=$(FLASCC) GLS3D=$(GLS3D) ALCEXTRA=$(ALCEXTRA) BASEQ3DIR=$(BASEQ3DIR) -j8 client
 
-#DOSBOX_OPTS:=-O4 -flto-api=$(SRCROOT)/dosbox-0.74/exports.txt -fno-exceptions -DDISABLE_JOYSTICK=1
-DOSBOX_OPTS:=-O0 -fno-exceptions -DDISABLE_JOYSTICK=1
+DOSBOX_OPTS:=-O4 -flto-api=$(SRCROOT)/dosbox-0.74/exports.txt -fno-exceptions -DDISABLE_JOYSTICK=1
+#DOSBOX_OPTS:=-O0 -fno-exceptions -DDISABLE_JOYSTICK=1
 
 BOCHS_OPTS:=-O4 -fno-exceptions
 
-BOCHS_CFG:=--disable-show-ips --enable-static --disable-plugins --enable-fpu --without-x11 --with-sdl
+BOCHS_CFG:=--disable-show-ips --enable-clgd54xx --enable-static --disable-plugins --enable-fpu --without-x11 --with-sdl
 
 bochsnative:
 	mkdir -p $(BUILD)/bochsnative
@@ -51,8 +51,8 @@ bochsnative:
 bochs:
 	mkdir -p $(BUILD)/bochs
 	
-	#cd $(BUILD)/bochs/ && CFLAGS="-O3" CXXFLAGS="-O3" \
-	#		PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="$(BOCHS_OPTS) " CXXFLAGS="$(BOCHS_OPTS) -I$(ALCEXTRA)/usr/include" $(SRCROOT)/bochs-2.6/configure $(BOCHS_CFG)
+	cd $(BUILD)/bochs/ && CFLAGS="-O3" CXXFLAGS="-O3" \
+			PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="$(BOCHS_OPTS) " CXXFLAGS="$(BOCHS_OPTS) -I$(ALCEXTRA)/usr/include" $(SRCROOT)/bochs-2.6/configure $(BOCHS_CFG)
 	cd $(BUILD)/bochs/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) SWF_LINK_OPTS="-Wl,--warn-unresolved-symbols -pthread -emit-swf -swf-preloader=VFSPreLoader.swf -swf-size=1024x768 -symbol-abc=Console.abc $(FLASCC)/usr/lib/AlcVFSZip.abc " make
 	mv $(BUILD)/bochs/bochs $(BUILD)/bochs/bochs.swf
 
