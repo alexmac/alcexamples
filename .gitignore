@@ -6,5 +6,6 @@
 Quake3/build
 Quake3/q3vfs
 dosbox-0.74/fs
-libs
+build
+install
 .DS_Store

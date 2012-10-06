@@ -2,8 +2,8 @@ FLASCC=/path/to/FLASCC/sdk
 ALCEXTRA=/path/to/alcextra
 GLS3D=/path/to/GLS3D
 
-BUILD=$(PWD)/libs/build
-INSTALL=$(PWD)/libs/install
+BUILD=$(PWD)/build
+INSTALL=$(PWD)/install
 SRCROOT=$(PWD)/
 
 all:
@@ -44,8 +44,8 @@ BOCHS_CFG:=--disable-show-ips --enable-clgd54xx --enable-static --disable-plugin
 bochsnative:
 	mkdir -p $(BUILD)/bochsnative
 	
-	#cd $(BUILD)/bochsnative/ && CFLAGS="-O3" CXXFLAGS="-O3" \
-	#		$(SRCROOT)/bochs-2.6/configure $(BOCHS_CFG)
+	cd $(BUILD)/bochsnative/ && CFLAGS="-O3" CXXFLAGS="-O3" \
+			$(SRCROOT)/bochs-2.6/configure $(BOCHS_CFG)
 	cd $(BUILD)/bochsnative/ && FLASCC=$(FLASCC) make
 
 bochs:
