@@ -68,12 +68,13 @@ dbnative:
 dosbox:
 	mkdir -p $(BUILD)/dosbox
 
-	#cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="$(DOSBOX_OPTS) " CXXFLAGS="$(DOSBOX_OPTS) -I$(ALCEXTRA)/usr/include" \
-	#		$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
-	#	--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
+	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="$(DOSBOX_OPTS) " CXXFLAGS="$(DOSBOX_OPTS) -I$(ALCEXTRA)/usr/include" \
+			$(SRCROOT)/dosbox-0.74/configure --disable-debug --disable-sdltest --disable-alsa-midi \
+		--disable-alsatest --disable-dynamic-core --disable-dynrec --disable-fpu-x86 --disable-opengl
 	cd $(BUILD)/dosbox/ && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make
 
-	cd $(SRCROOT)/dosbox-0.74/fs && zip -9 -q -r $(BUILD)/dosbox/dosboxvfs.zip *
+	mkdir -p $(SRCROOT)/dosbox-0.74/fs
+	cd $(SRCROOT)/dosbox-0.74/fs && zip -i -9 -q -r $(BUILD)/dosbox/dosboxvfs.zip *
 
 	cd $(BUILD)/dosbox && java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
 		-AS3 -strict -optimize \
@@ -119,3 +120,15 @@ dbfinal:
 		-symbol-abc=Console.abc \
 		-emit-swf -swf-version=18 -swf-preloader=VFSPreLoader.swf -o dosbox.swf
 
+opencv:
+	mkdir -p $(BUILD)/opencv
+	cd $(BUILD)/opencv && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O4" CXXFLAGS="-O4" cmake $(SRCROOT)/OpenCV-2.4.2 \
+		-DBUILD_SHARED_LIBS=FALSE -DCMAKE_SIZEOF_VOID_P=4 -DBUILD_EXAMPLES=FALSE \
+		-DBUILD_PERF_TESTS=FALSE -DBUILD_TESTS=FALSE -DBUILD_ZLIB=TRUE -DBUILD_TIFF=TRUE -DBUILD_JPEG=TRUE -DBUILD_JASPER=TRUE -DBUILD_PNG=TRUE
+	cd $(BUILD)/opencv && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make -j8
+
+opencvnative:
+	mkdir -p $(BUILD)/opencvnative
+	cd $(BUILD)/opencvnative && cmake $(SRCROOT)/OpenCV-2.4.2 \
+		-DBUILD_SHARED_LIBS=FALSE -DBUILD_EXAMPLES=TRUE -DBUILD_PERF_TESTS=FALSE -DBUILD_TESTS=FALSE
+	cd $(BUILD)/opencvnative && make -j8
