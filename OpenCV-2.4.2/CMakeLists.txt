@@ -420,7 +420,7 @@ add_subdirectory(doc)
 add_subdirectory(data)
 
 # extra applications
-add_subdirectory(apps)
+# add_subdirectory(apps)
 
 # examples
 if(BUILD_EXAMPLES OR BUILD_ANDROID_EXAMPLES OR INSTALL_PYTHON_EXAMPLES)

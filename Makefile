@@ -120,12 +120,53 @@ dbfinal:
 		-symbol-abc=Console.abc \
 		-emit-swf -swf-version=18 -swf-preloader=VFSPreLoader.swf -o dosbox.swf
 
+OPENCV_OPTS:=-O0
+#-flto-api=$(SRCROOT)/OpenCV-2.4.2/exports.txt
+
 opencv:
 	mkdir -p $(BUILD)/opencv
 	cd $(BUILD)/opencv && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) CFLAGS="-O4" CXXFLAGS="-O4" cmake $(SRCROOT)/OpenCV-2.4.2 \
 		-DBUILD_SHARED_LIBS=FALSE -DCMAKE_SIZEOF_VOID_P=4 -DBUILD_EXAMPLES=FALSE \
-		-DBUILD_PERF_TESTS=FALSE -DBUILD_TESTS=FALSE -DBUILD_ZLIB=TRUE -DBUILD_TIFF=TRUE -DBUILD_JPEG=TRUE -DBUILD_JASPER=TRUE -DBUILD_PNG=TRUE
-	cd $(BUILD)/opencv && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make -j8
+		-DBUILD_PERF_TESTS=FALSE -DBUILD_TESTS=FALSE -DBUILD_ZLIB=TRUE -DBUILD_TIFF=TRUE \
+		-DBUILD_JPEG=TRUE -DBUILD_JASPER=TRUE -DBUILD_PNG=TRUE -DCMAKE_INSTALL_PREFIX=$(INSTALL)
+	cd $(BUILD)/opencv && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make -j6
+	cd $(BUILD)/opencv && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make install
+
+	make opencv_test
+
+opencv_test:
+	@echo "Generating VFS..."
+	@mkdir -p $(BUILD)/opencv/vfs
+	@cp -f $(SRCROOT)/OpenCV-2.4.2/data/haarcascades/haarcascade_frontalface_alt.xml $(BUILD)/opencv/vfs/
+	@cd $(BUILD)/opencv && "$(FLASCC)/usr/bin/genfs" --type=embed vfs vfs
+
+	@echo "Compiling Console..."
+	@cd $(BUILD)/opencv && java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
+		-AS3 -strict -optimize \
+		-import $(FLASCC)/usr/lib/builtin.abc \
+		-import $(FLASCC)/usr/lib/playerglobal.abc \
+		-import $(FLASCC)/usr/lib/ISpecialFile.abc \
+		-import $(FLASCC)/usr/lib/IBackingStore.abc \
+		-import $(FLASCC)/usr/lib/InMemoryBackingStore.abc \
+		-import $(FLASCC)/usr/lib/IVFS.abc \
+		-import $(FLASCC)/usr/lib/CModule.abc \
+		-import $(FLASCC)/usr/lib/C_Run.abc \
+		-import $(FLASCC)/usr/lib/BinaryData.abc \
+		-import $(FLASCC)/usr/lib/PlayerKernel.abc \
+		-import $(FLASCC)/usr/lib/AlcVFSZip.abc \
+		$(SRCROOT)/OpenCV-2.4.2/Console.as vfs*.as -outdir . -out Console
+
+	@echo "Linking facetracker..."
+	@cd $(BUILD)/opencv/ && $(FLASCC)/usr/bin/g++ \
+		-I$(INSTALL)/include/opencv \
+		-I$(INSTALL)/include/ \
+		$(SRCROOT)/OpenCV-2.4.2/facetracker.cpp \
+		-pthread \
+		-swf-size=640x360 \
+		-symbol-abc=Console.abc \
+		-Wl,--start-group $(INSTALL)/lib/libopencv*.a -Wl,--end-group \
+		-lFlash++ -lAS3++ -lz $(OPENCV_OPTS) \
+		-emit-swf -swf-version=18 -o facetracker.swf
 
 opencvnative:
 	mkdir -p $(BUILD)/opencvnative
