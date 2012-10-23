@@ -26,7 +26,7 @@ nethack:
 	
 
 neverball:
-	cd neverball-1.5.4 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make FLASCC=$(FLASCC) GLS3D=$(GLS3D) ALCEXTRA=$(ALCEXTRA) -j8
+	cd neverball-1.5.4 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make FLASCC=$(FLASCC) GLS3D=$(GLS3D) ALCEXTRA=$(ALCEXTRA) DATADIR=data -j8
 
 quake3:
 	cd Quake3 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make FLASCC=$(FLASCC) GLS3D=$(GLS3D) ALCEXTRA=$(ALCEXTRA) BASEQ3DIR=$(BASEQ3DIR) -j8
@@ -120,8 +120,7 @@ dbfinal:
 		-symbol-abc=Console.abc \
 		-emit-swf -swf-version=18 -swf-preloader=VFSPreLoader.swf -o dosbox.swf
 
-OPENCV_OPTS:=-O0
-#-flto-api=$(SRCROOT)/OpenCV-2.4.2/exports.txt
+OPENCV_OPTS:=-O4 -flto-api=$(SRCROOT)/OpenCV-2.4.2/exports.txt
 
 opencv:
 	mkdir -p $(BUILD)/opencv

@@ -42,6 +42,8 @@ package com.adobe.flascc
   class ZipBackingStore extends InMemoryBackingStore {
     public function ZipBackingStore()
     {
+      addDirectory("/root")
+      addDirectory("/root/data")
     }
 
     public function addZip(data:ByteArray) {
@@ -49,9 +51,9 @@ package com.adobe.flascc
       for (var i = 0; i < zip.entries.length; i++) {
         var e = zip.entries[i]
         if (e.isDirectory()) {
-          addDirectory("/"+e.name)
+          addDirectory("/root/data/"+e.name)
         } else {
-          addFile("/"+e.name, zip.getInput(e))
+          addFile("/root/data/"+e.name, zip.getInput(e))
         }
       }
     }
@@ -326,7 +328,7 @@ package com.adobe.flascc
         CModule.vfs.console = this
         CModule.vfs.addBackingStore(zfs, null)
 
-        CModule.startAsync(this, new <String>["/data/neverball.swf"])
+        CModule.startAsync(this, new <String>["/root/neverball.swf"])
 
         vgl_mx = CModule.getPublicSymbol("vgl_cur_mx")
         vgl_my = CModule.getPublicSymbol("vgl_cur_my")

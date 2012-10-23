@@ -410,8 +410,8 @@ int main(int argc, char *argv[])
     config_init();
     config_load();
 
-	/* unlock all levels by defalut */
-	config_set_cheat();
+    /* unlock all levels by defalut */
+    config_set_cheat();
 
     /* Initialize the joystick. */
 
@@ -523,7 +523,6 @@ int main(int argc, char *argv[])
 #ifdef __AVM2__
 void mainLoopTick()
 {
-	/*inline_as3 ("trace('mainLoopTick starting...')");*/
 	loop();
 
 	t1 = SDL_GetTicks();
