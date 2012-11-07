@@ -31,8 +31,7 @@ package com.adobe.flascc
   import flash.utils.ByteArray;
   import flash.utils.Endian;
   import flash.utils.getTimer;
-  
-  import C_Run.ram;
+
   import com.adobe.flascc.CModule;
   import com.adobe.flascc.vfs.InMemoryBackingStore;
   import com.adobe.flascc.vfs.ISpecialFile;
@@ -74,9 +73,6 @@ package com.adobe.flascc
   */
   public class Console extends Sprite implements ISpecialFile
   {
-    public static var current:Console;
-    private var bm:Bitmap
-    private var bmd:BitmapData
     private var vgl_mx:int, vgl_my:int, kp:int, vgl_buttons:int;
     private var mainloopTickPtr:int, soundUpdatePtr:int, audioBufferPtr:int;
     private var inputContainer
@@ -84,12 +80,11 @@ package com.adobe.flascc
     private var mx:int = 0, my:int = 0, last_mx:int = 0, last_my:int = 0, button:int = 0;
     private var snd:Sound = null
     private var sndChan:SoundChannel = null
-    public var sndDataBuffer:ByteArray = null
     private var s3d:Stage3D;
     private var ctx3d:Context3D;
     private var rendered:Boolean = false;
     private var inited:Boolean = false
-    private var emptyVec:Vector.<int> = new Vector.<int>()
+    private const emptyVec:Vector.<int> = new Vector.<int>()
 
     /**
     * To Support the preloader case you might want to have the Console
@@ -97,9 +92,12 @@ package com.adobe.flascc
     */
     public function Console(container:DisplayObjectContainer = null)
     {
-      current = this;
       CModule.rootSprite = container ? container.root : this
-      
+
+      if(CModule.runningAsWorker()) {
+        return;
+      }
+
       if(container) {
         container.addChild(this)
         init(null)
@@ -109,7 +107,7 @@ package com.adobe.flascc
     }
 
     /**
-    * All of the real flascc init happens in this method
+    * All of the real FlasCC init happens in this method
     * which is either run on startup or once the SWF has
     * been added to the stage.
     */
@@ -126,13 +124,14 @@ package com.adobe.flascc
       stage.addEventListener(KeyboardEvent.KEY_UP, bufferKeyUp);
       stage.addEventListener(MouseEvent.MOUSE_MOVE, bufferMouseMove);
       stage.addEventListener(MouseEvent.MOUSE_DOWN, bufferMouseDown);
+      stage.addEventListener(MouseEvent.MOUSE_UP, bufferMouseUp);
+
       try {
         stage.addEventListener(MouseEvent.RIGHT_CLICK, rightClick);
       } catch(e:*) {
         // disable the right-click menu if possible
       }
-      stage.addEventListener(MouseEvent.MOUSE_UP, bufferMouseUp);
-    
+      
       s3d = stage.stage3Ds[0];
       s3d.addEventListener(Event.CONTEXT3D_CREATE, context_created);
       /*
@@ -207,19 +206,22 @@ package com.adobe.flascc
       return nbyte
     }
 
+    /**
+    * libVGL expects to be able to read Keyboard input from
+    * file descriptor zero using normal C IO.
+    */
     public function read(fd:int, bufPtr:int, nbyte:int, errnoPtr:int):int
     {
       if(fd == 0 && nbyte == 1) {
-        keybytes.position = kp++;
+        keybytes.position = kp++
         if(keybytes.bytesAvailable) {
-          CModule.write8(bufPtr, keybytes.readUnsignedByte());
+          CModule.write8(bufPtr, keybytes.readUnsignedByte())
         } else {
-        keybytes.position = 0;
-        keybytes.length = 0;
-        kp = 0;
+        keybytes.position = 0
+        kp = 0
         }
       }
-      return 0;
+      return 0
     }
 
     /**
@@ -248,12 +250,20 @@ package com.adobe.flascc
       return CModule.callI(CModule.getPublicSymbol("vglttyioctl"), vglttyargs);
     }
     private var vglttyargs:Vector.<int> = new Vector.<int>()
-
-    public function bufferMouseMove(me:MouseEvent) 
+    
+    /**
+    * Helper function that traces to the flashlog text file and also
+    * displays output in the on-screen textfield console.
+    */
+    protected function consoleWrite(s:String):void
     {
-      me.stopPropagation();
-      mx = me.stageX;
-      my = me.stageY;
+      trace(s)
+    }
+
+    public function bufferMouseMove(me:MouseEvent) {
+      me.stopPropagation()
+      mx = me.stageX
+      my = me.stageY
     }
     
     public function bufferMouseDown(me:MouseEvent) 
@@ -287,17 +297,12 @@ package com.adobe.flascc
 
       keybytes.writeByte(int(ke.keyCode | 0x80));
     }
-
-    public function consoleWrite(s:String):void
-    {
-      trace(s);
-    }
-
+    
     public function sndComplete(e:Event):void
     {
-      sndChan.removeEventListener(Event.SOUND_COMPLETE, sndComplete);
-      sndChan = snd.play();
-      sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete);
+      sndChan.removeEventListener(Event.SOUND_COMPLETE, sndComplete)
+      sndChan = snd.play()
+      sndChan.addEventListener(Event.SOUND_COMPLETE, sndComplete)
     }
 
     public function sndData(e:SampleDataEvent):void
@@ -309,8 +314,8 @@ package com.adobe.flascc
       //e.data.writeBytes(ram, ap, 16384);
       
       for(var i:int=0; i<16384; i+=2) {
-        ram.position = ap+i;
-        var s:int = ram.readShort()
+        CModule.ram.position = ap+i;
+        var s:int = CModule.ram.readShort()
         var v:Number = (s / 32768.0)
         e.data.writeFloat(v)
       }
