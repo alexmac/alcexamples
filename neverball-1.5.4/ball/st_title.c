@@ -164,10 +164,10 @@ static int title_enter(void)
                     play_id = gui_start(kd, sgettext("menu^Play"),
                                         GUI_MED, TITLE_PLAY, 1);
 
-                //gui_state(kd, sgettext("menu^Replay"),  GUI_MED, TITLE_DEMO, 0);
+                /*gui_state(kd, sgettext("menu^Replay"),  GUI_MED, TITLE_DEMO, 0);*/
                 gui_state(kd, sgettext("menu^Help"),    GUI_MED, TITLE_HELP, 0);
-                //gui_state(kd, sgettext("menu^Options"), GUI_MED, TITLE_CONF, 0);
-                //gui_state(kd, sgettext("menu^Exit"),    GUI_MED, TITLE_EXIT, 0);
+                /*gui_state(kd, sgettext("menu^Options"), GUI_MED, TITLE_CONF, 0);*/
+                /*gui_state(kd, sgettext("menu^Exit"),    GUI_MED, TITLE_EXIT, 0);*/
             }
 
             gui_filler(jd);

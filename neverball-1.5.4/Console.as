@@ -137,6 +137,7 @@ package com.adobe.flascc
     
       s3d = stage.stage3Ds[0];
       s3d.addEventListener(Event.CONTEXT3D_CREATE, context_created);
+      /*
       try {
         // If we're in FP 11.4+ this should request a constrained Stage3D context
         s3d.requestContext3D(Context3DRenderMode.AUTO, Context3DProfile.BASELINE_CONSTRAINED)
@@ -144,6 +145,8 @@ package com.adobe.flascc
         // If that failed we're in an older FP 11 player so we try for a normal Stage3D context
         s3d.requestContext3D(Context3DRenderMode.AUTO)
       }
+      */
+      s3d.requestContext3D(Context3DRenderMode.AUTO)
     }
 
     private function rightClick(e:Event):void

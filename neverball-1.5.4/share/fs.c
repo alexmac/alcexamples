@@ -29,7 +29,6 @@ int fs_init(const char *argv0)
     if (PHYSFS_init(argv0))
     {
         PHYSFS_permitSymbolicLinks(1);
-        //PHYSFS_setSaneConfig("Neverball", "Neverball", NULL, 0, 0);
         return 1;
     }
 

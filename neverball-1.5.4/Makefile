@@ -1,16 +1,5 @@
 
 #------------------------------------------------------------------------------
-# Default target (careful, this is recursive)
-ALCEXTRA:=/path/to/FLASCCextra
-GLS3D:=/path/to/GLS3D
-
-all:
-	$(MAKE) neverball.swf CC=$(FLASCC)/usr/bin/gcc DEBUG=0 ENABLE_NLS=0 \
-		LDFLAGS="-L$(ALCEXTRA)/install/usr/lib/ $(GLS3D)/install/usr/lib/libGL.abc -L$(GLS3D)/install/usr/lib/" \
-		SDL_CPPFLAGS="-I$(ALCEXTRA)/install/usr/include/ -I$(GLS3D)/install/usr/include -I$(ALCEXTRA)/install/usr/include -I$(FLASCC)/usr/include/libpng15 -I$(FLASCC)/usr/include/SDL -I$(ALCEXTRA)/install/usr/include/SDL" \
-		PNG_CPPFLAGS=" " SDL_LIBS="-lSDL -lvgl " PNG_LIBS=" -lpng "
-
-#------------------------------------------------------------------------------
 
 BUILD := $(shell head -n1 BUILD 2> /dev/null || echo release)
 
@@ -53,11 +42,10 @@ endif
 # Optional flags (CFLAGS, CPPFLAGS, ...)
 
 ifeq ($(DEBUG),1)
-    CFLAGS   := -O0 
-#    CFLAGS   := -g -O0
+    CFLAGS   := -g
     CPPFLAGS :=
 else
-    CFLAGS   := -O4
+    CFLAGS   := -O2
     CPPFLAGS := -DNDEBUG
 endif
 
@@ -73,13 +61,13 @@ ifeq ($(ENABLE_WII),1)
 
     ALL_CFLAGS := -Wall -std=c99 -pedantic -fms-extensions $(CFLAGS)
 else
-    ALL_CFLAGS := -Wall $(CFLAGS)
+    ALL_CFLAGS := -Wall -ansi -pedantic $(CFLAGS)
 endif
 
 # Preprocessor...
 
-SDL_CPPFLAGS := $(shell $(FLASCC)/usr/bin/sdl-config --cflags) -U_GNU_SOURCE
-PNG_CPPFLAGS := $(shell $(FLASCC)/usr/bin/libpng-config --cflags)
+SDL_CPPFLAGS := $(shell sdl-config --cflags) -U_GNU_SOURCE
+PNG_CPPFLAGS := $(shell libpng-config --cflags)
 
 ALL_CPPFLAGS := $(SDL_CPPFLAGS) $(PNG_CPPFLAGS) -Ishare \
     -DVERSION=\"$(VERSION)\"
@@ -108,8 +96,8 @@ ALL_CPPFLAGS += $(CPPFLAGS)
 #------------------------------------------------------------------------------
 # Libraries
 
-SDL_LIBS := $(shell $(FLASCC)/usr/bin/sdl-config --libs)
-PNG_LIBS := $(shell $(FLASCC)/usr/bin/libpng-config --libs)
+SDL_LIBS := $(shell sdl-config --libs)
+PNG_LIBS := $(shell libpng-config --libs)
 FS_LIBS := -lphysfs
 
 # The  non-conditionalised values  below  are specific  to the  native
@@ -143,14 +131,14 @@ ifdef DARWIN
     OGL_LIBS  := -framework OpenGL
 endif
 
-BASE_LIBS := -ljpeg $(PNG_LIBS) -lz $(FS_LIBS) 
+BASE_LIBS := -ljpeg $(PNG_LIBS) $(FS_LIBS)
 
 ifdef DARWIN
     BASE_LIBS += -L/opt/local/lib
 endif
 
 ALL_LIBS := $(SDL_LIBS) $(BASE_LIBS) $(TILT_LIBS) $(INTL_LIBS) -lSDL_ttf \
-    -lvorbisfile $(OGL_LIBS) -lfreetype -lvorbis -logg
+    -lvorbisfile $(OGL_LIBS)
 
 #------------------------------------------------------------------------------
 
@@ -159,7 +147,7 @@ ifdef MINGW
 endif
 
 MAPC_TARG := mapc$(EXT)
-BALL_TARG := neverball.swf
+BALL_TARG := neverball$(EXT)
 PUTT_TARG := neverputt$(EXT)
 
 ifdef MINGW
@@ -321,59 +309,16 @@ DESKTOPS := $(basename $(wildcard dist/*.desktop.in))
 
 #------------------------------------------------------------------------------
 
-maps: sols
+all : $(BALL_TARG) $(PUTT_TARG) $(MAPC_TARG) sols locales desktops
 
-Console.abc: Console.as
-	mkdir -p vfs
-	rm -f *.zip
-	cd data1 && zip -9 -q -r ../data1.zip *
-	cd data2 && zip -9 -q -r ../data2.zip *
-	cd data3 && zip -9 -q -r ../data3.zip *
-
-	java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
-	-AS3 -strict -optimize \
-	-import $(FLASCC)/usr/lib/builtin.abc \
-	-import $(FLASCC)/usr/lib/playerglobal.abc \
-	-import $(GLS3D)/install/usr/lib/libGL.abc \
-	-import $(FLASCC)/usr/lib/ISpecialFile.abc \
-	-import $(FLASCC)/usr/lib/IBackingStore.abc \
-	-import $(FLASCC)/usr/lib/IVFS.abc \
-	-import $(FLASCC)/usr/lib/CModule.abc \
-	-import $(FLASCC)/usr/lib/C_Run.abc \
-	-import $(FLASCC)/usr/lib/BinaryData.abc \
-	-import $(FLASCC)/usr/lib/PlayerKernel.abc \
-	VFSPreLoader.as -swf VFSPreLoader,1024,768,60 -outdir . -out VFSPreLoader
-	python $(FLASCC)/usr/bin/swfdink.py -v 17 VFSPreLoader.swf
-
-	java -jar $(FLASCC)/usr/lib/asc2.jar -merge -md \
-	-AS3 -strict -optimize \
-	-import $(FLASCC)/usr/lib/builtin.abc \
-	-import $(FLASCC)/usr/lib/playerglobal.abc \
-	-import $(GLS3D)/install/usr/lib/libGL.abc \
-	-import $(FLASCC)/usr/lib/ISpecialFile.abc \
-	-import $(FLASCC)/usr/lib/IBackingStore.abc \
-	-import $(FLASCC)/usr/lib/IVFS.abc \
-	-import $(FLASCC)/usr/lib/InMemoryBackingStore.abc \
-	-import $(FLASCC)/usr/lib/AlcVFSZip.abc \
-	-import $(FLASCC)/usr/lib/CModule.abc \
-	-import $(FLASCC)/usr/lib/C_Run.abc \
-	-import $(FLASCC)/usr/lib/BinaryData.abc \
-	-import $(FLASCC)/usr/lib/PlayerKernel.abc \
-	Console.as -outdir . -out Console
-
-$(BALL_TARG) : $(BALL_OBJS) Console.abc
-	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) $(FLASCC)/usr/lib/AlcVFSZip.abc \
-		-flto-api=exports.txt -no-swf-preloader -swf-version=17 -symbol-abc=Console.abc \
-		-jvmopt=-Xmx4G -emit-swf -swf-size=1024x768 $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
+$(BALL_TARG) : $(BALL_OBJS)
+	$(CC) $(ALL_CFLAGS) -o $(BALL_TARG) $(BALL_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(PUTT_TARG) : $(PUTT_OBJS)
-	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) -emit-swf $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)
+	$(CC) $(ALL_CFLAGS) -o $(PUTT_TARG) $(PUTT_OBJS) $(LDFLAGS) $(ALL_LIBS)
 
 $(MAPC_TARG) : $(MAPC_OBJS)
 	$(CC) $(ALL_CFLAGS) -o $(MAPC_TARG) $(MAPC_OBJS) $(LDFLAGS) $(BASE_LIBS)
-
-genvfs:
-	cd vfsdata && $(MAKE)
 
 # Work around some extremely helpful sdl-config scripts.
 
@@ -396,10 +341,9 @@ clean-src :
 	$(RM) $(MAPC_TARG) $(MAPC_OBJS) $(MAPC_DEPS)
 
 clean : clean-src
-#	$(RM) $(SOLS)
+	$(RM) $(SOLS)
 	$(RM) $(DESKTOPS)
 	$(MAKE) -C po clean
-	rm -f Console.abc
 
 test : all
 	./neverball
@@ -410,7 +354,7 @@ TAGS :
 
 #------------------------------------------------------------------------------
 
-.PHONY : all sols locales clean-src clean test TAGS genvfs
+.PHONY : all sols locales clean-src clean test TAGS
 
 -include $(BALL_DEPS) $(PUTT_DEPS) $(MAPC_DEPS)
 
