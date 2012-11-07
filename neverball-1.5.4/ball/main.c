@@ -452,7 +452,7 @@ int main(int argc, char *argv[])
 
 #ifdef __AVM2__
 	/* 
-	AlcConsole.as will get a pointer to mainLoopTick() and
+	Console.as will get a pointer to mainLoopTick() and
 	call that every frame instead.
 	This way we effectively integrate the game loop with the
 	FlashPlayer event loop (so we don't hang in here as main() 
@@ -462,7 +462,7 @@ int main(int argc, char *argv[])
 	/*
 	Here we throw an exception so that we can break the control
 	out of main() without returninng.
-	The code in AclConsole.as will take care of calling the 
+	The code in Console.as will take care of calling the 
 	factored out game loop code by calling mainLoopTick() periodically.
 	*/
     AS3_GoAsync();

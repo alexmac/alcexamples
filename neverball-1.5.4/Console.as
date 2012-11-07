@@ -75,8 +75,6 @@ package com.adobe.flascc
   public class Console extends Sprite implements ISpecialFile
   {
     public static var current:Console;
-    private static var _width:int = 1024;
-    private static var _height:int = 768;
     private var bm:Bitmap
     private var bmd:BitmapData
     private var vgl_mx:int, vgl_my:int, kp:int, vgl_buttons:int;
@@ -157,7 +155,7 @@ package com.adobe.flascc
     private function context_created(e:Event):void
     {
       ctx3d = s3d.context3D
-      ctx3d.configureBackBuffer(_width, _height, 2, true /*enableDepthAndStencil*/ )
+      ctx3d.configureBackBuffer(stage.stageWidth, stage.stageHeight, 2, true /*enableDepthAndStencil*/ )
       ctx3d.enableErrorChecking = false;
       trace("Stage3D context: " + ctx3d.driverInfo);
 
@@ -177,9 +175,7 @@ package com.adobe.flascc
     private function stageResize(event:Event):void
     {
         // need to reconfigure back buffer
-        _width = stage.stageWidth
-        _height = stage.stageHeight
-        ctx3d.configureBackBuffer(_width, _height, 2, true /*enableDepthAndStencil*/ )
+        ctx3d.configureBackBuffer(stage.stageWidth, stage.stageHeight, 2, true /*enableDepthAndStencil*/ )
     }
 
     /**
