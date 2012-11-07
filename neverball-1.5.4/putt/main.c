@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <locale.h>
+#include <AS3/AS3.h>
 
 #include "glext.h"
 #include "audio.h"
@@ -189,6 +190,8 @@ static int loop(void)
     return d;
 }
 
+static int t1, t0, uniform;
+
 int main(int argc, char *argv[])
 {
     int camera = 0;
@@ -242,6 +245,24 @@ int main(int argc, char *argv[])
 
             init_state(&st_null);
             goto_state(&st_title);
+            
+            #ifdef __AVM2__
+	/* 
+	Console.as will get a pointer to mainLoopTick() and
+	call that every frame instead.
+	This way we effectively integrate the game loop with the
+	FlashPlayer event loop (so we don't hang in here as main() 
+	is called from within the FlashPlayer event loop).
+	 */
+	
+	/*
+	Here we throw an exception so that we can break the control
+	out of main() without returninng.
+	The code in Console.as will take care of calling the 
+	factored out game loop code by calling mainLoopTick() periodically.
+	*/
+    AS3_GoAsync();
+#endif
 
             while (loop())
                 if ((t1 = SDL_GetTicks()) > t0)
@@ -269,5 +290,23 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+#ifdef __AVM2__
+void mainLoopTick()
+{
+    loop();
+    
+                if ((t1 = SDL_GetTicks()) > t0)
+                {
+                    st_timer((t1 - t0) / 1000.f);
+                    st_paint(0.001f * t1);
+                    SDL_GL_SwapBuffers();
+
+                    t0 = t1;
+
+                    if (config_get_d(CONFIG_NICE))
+                        SDL_Delay(1);
+                }
+}
+#endif
 /*---------------------------------------------------------------------------*/
 
