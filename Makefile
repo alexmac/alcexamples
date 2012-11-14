@@ -64,7 +64,7 @@ neverball:
 	cd neverball-1.5.4 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make \
 		DATADIR=data \
 		LDFLAGS="-L$(ALCEXTRA)/install/usr/lib/ $(GLS3D)/install/usr/lib/libGL.abc -L$(GLS3D)/install/usr/lib/ $(FLASCC)/usr/lib/AlcVFSZip.abc -swf-preloader=$(BUILD)/neverball/VFSPreLoader.swf -swf-version=17 -symbol-abc=$(BUILD)/neverball/Console.abc -jvmopt=-Xmx4G -emit-swf -swf-size=800x600 " \
-		CFLAGS="-O0 -g" \
+		CFLAGS="-O4 -flto-api=exports.txt" \
 		CC="gcc" \
 		SDL_CPPFLAGS="-I$(ALCEXTRA)/install/usr/include/ -I$(GLS3D)/install/usr/include -I$(ALCEXTRA)/install/usr/include -I$(FLASCC)/usr/include/libpng15 -I$(FLASCC)/usr/include/SDL -I$(ALCEXTRA)/install/usr/include/SDL" \
 		PNG_CPPFLAGS="$(shell $(FLASCC)/usr/bin/libpng-config --cflags)" \
@@ -75,6 +75,8 @@ neverball:
 		DEBUG=0 ENABLE_NLS=0 \
 		neverball.swf neverputt.swf \
 		-j8
+
+	mv neverball-1.5.4/*.swf $(BUILD)/neverball/
 
 quake3:
 	cd Quake3 && PATH=$(FLASCC)/usr/bin:$(ALCEXTRA)/usr/bin:$(PATH) make FLASCC=$(FLASCC) GLS3D=$(GLS3D) ALCEXTRA=$(ALCEXTRA) BASEQ3DIR=$(BASEQ3DIR) -j8

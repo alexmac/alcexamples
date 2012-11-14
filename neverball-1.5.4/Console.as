@@ -67,7 +67,7 @@ package com.adobe.flascc
   }
 
   /**
-  * A basic implementation of a console for flascc apps.
+  * A basic implementation of a console for FlasCC apps.
   * The PlayerKernel class delegates to this for things like read/write
   * so that console output can be displayed in a TextField on the Stage.
   */
@@ -178,7 +178,7 @@ package com.adobe.flascc
     }
 
     /**
-    * The callback to call when flascc code calls the posix exit() function. Leave null to exit silently.
+    * The callback to call when FlasCC code calls the posix exit() function. Leave null to exit silently.
     * @private
     */
     public var exitHook:Function;
@@ -216,9 +216,11 @@ package com.adobe.flascc
         keybytes.position = kp++
         if(keybytes.bytesAvailable) {
           CModule.write8(bufPtr, keybytes.readUnsignedByte())
+          return 1
         } else {
-        keybytes.position = 0
-        kp = 0
+          keybytes.length = 0
+          keybytes.position = 0
+          kp = 0
         }
       }
       return 0
@@ -282,20 +284,12 @@ package com.adobe.flascc
       button = 0;
     }
 
-    public function bufferKeyDown(ke:KeyboardEvent) 
-    {
-      if(Keyboard.capsLock || ke.keyCode >= 127)
-        return;
-
-      keybytes.writeByte(int(ke.keyCode & 0x7F));
+    public function bufferKeyDown(ke:KeyboardEvent) {
+      keybytes.writeByte(int(ke.keyCode & 0x7F))
     }
     
-    public function bufferKeyUp(ke:KeyboardEvent) 
-    {
-      if(Keyboard.capsLock || ke.keyCode > 128)
-        return;
-
-      keybytes.writeByte(int(ke.keyCode | 0x80));
+    public function bufferKeyUp(ke:KeyboardEvent) {
+      keybytes.writeByte(int(ke.keyCode | 0x80))
     }
     
     public function sndComplete(e:Event):void
