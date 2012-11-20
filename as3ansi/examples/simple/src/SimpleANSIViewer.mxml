@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute">
+	<mx:Script>
+	   <![CDATA[
+	   	import mx.core.UIComponent;
+	   	import net.peternitsch.ansi.viewer.AnsiViewer;
+	   
+	   	private var ansiViewer:AnsiViewer;
+	   
+	   	private function init():void {
+	   		ansiViewer = new AnsiViewer(80, 100, false);
+	   		ansiViewer.addEventListener(Event.COMPLETE, handleComplete);
+			ansiViewer.load("SO-HMP1.ANS");
+	   	}
+	   
+	   	private function handleComplete(e:Event):void {
+	   		var bitmap:Bitmap = ansiViewer.getBitmap();
+	   		
+	   		var ui:UIComponent = new UIComponent();
+	   		ui.height = bitmap.height;
+	   		ui.addChild(bitmap);
+			panel.addChild(ui);
+	   	}
+	   	
+	]]>
+	</mx:Script>
+	
+	<mx:Panel x="10" y="10" width="750" height="600" layout="absolute" id="panel" verticalScrollPolicy="auto" backgroundColor="#000000" title="AS3 ANSI" creationComplete="init()">
+	</mx:Panel>
+</mx:Application>
