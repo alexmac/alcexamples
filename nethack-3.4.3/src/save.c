@@ -696,11 +696,16 @@ static int bw_fd = -1;
 static FILE *bw_FILE = 0;
 static boolean buffering = FALSE;
 
+#if defined(UNIX) && !defined(__AVM2__)
+#define BUFFER_OUTPUT
+#endif
+
+
 void
 bufon(fd)
     int fd;
 {
-#ifdef UNIX
+#ifdef BUFFER_OUTPUT
     if(bw_fd >= 0)
 	panic("double buffering unexpected");
     bw_fd = fd;
@@ -722,7 +727,7 @@ void
 bflush(fd)
     int fd;
 {
-#ifdef UNIX
+#ifdef BUFFER_OUTPUT
     if(fd == bw_fd) {
 	if(fflush(bw_FILE) == EOF)
 	    panic("flush of savefile failed!");
@@ -744,14 +749,14 @@ register unsigned num;
 	if (count_only) return;
 #endif
 
-#ifdef UNIX
+#ifdef BUFFER_OUTPUT
 	if (buffering) {
 	    if(fd != bw_fd)
 		panic("unbuffered write to fd %d (!= %d)", fd, bw_fd);
 
 	    failed = (fwrite(loc, (int)num, 1, bw_FILE) != 1);
 	} else
-#endif /* UNIX */
+#endif /* BUFFER_OUTPUT */
 	{
 /* lint wants the 3rd arg of write to be an int; lint -p an unsigned */
 #if defined(BSD) || defined(ULTRIX)
@@ -776,7 +781,7 @@ bclose(fd)
     int fd;
 {
     bufoff(fd);
-#ifdef UNIX
+#ifdef BUFFER_OUTPUT
     if (fd == bw_fd) {
 	(void) fclose(bw_FILE);
 	bw_fd = -1;

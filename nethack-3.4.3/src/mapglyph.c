@@ -19,7 +19,7 @@ int explcolors[] = {
 	CLR_WHITE,	/* frosty  */
 };
 
-#if !defined(TTY_GRAPHICS)
+#if !defined(TTY_GRAPHICS) || defined(__AVM2__)
 #define has_color(n)  TRUE
 #endif
 

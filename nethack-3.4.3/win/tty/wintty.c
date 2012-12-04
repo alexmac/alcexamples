@@ -2506,6 +2506,33 @@ tty_raw_print_bold(str)
 #endif
 }
 
+#ifdef __AVM2__
+#include <pthread.h>
+static volatile int TTYInputAvailable = 0;
+static pthread_mutex_t TTYInputMutex = PTHREAD_MUTEX_INITIALIZER;
+
+int inputAvailable() {
+	int r = 0;
+	pthread_mutex_lock(&TTYInputMutex);
+	r = TTYInputAvailable;
+	pthread_mutex_unlock(&TTYInputMutex);
+	return r;
+}
+
+void incrementInputAvailable() {
+	pthread_mutex_lock(&TTYInputMutex);
+	TTYInputAvailable++;
+	pthread_mutex_unlock(&TTYInputMutex);
+}
+
+void decrementInputAvailable() {
+	pthread_mutex_lock(&TTYInputMutex);
+	TTYInputAvailable--;
+	pthread_mutex_unlock(&TTYInputMutex);
+}
+
+#endif
+
 int
 tty_nhgetch()
 {
@@ -2528,7 +2555,15 @@ tty_nhgetch()
      */
     if (WIN_MESSAGE != WIN_ERR && wins[WIN_MESSAGE])
 	    wins[WIN_MESSAGE]->flags &= ~WIN_STOP;
+
+
+	/* Spin then decrement. Single producer+consumer only! */
+	tprintf("read spin...\n");
+	while(!inputAvailable()) {  }
+	decrementInputAvailable();
+
 #ifdef UNIX
+	tprintf("about to read 1: \n");
     i = ((++nesting == 1) ? tgetch() :
 	 (read(fileno(stdin), (genericptr_t)&nestbuf,1) == 1 ? (int)nestbuf :
 								EOF));

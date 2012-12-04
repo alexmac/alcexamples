@@ -225,6 +225,7 @@ package net.peternitsch.ansi.parser
 		private var _currentBackgroundColor:uint = SixteenColors.BLACK_NORMAL;
 		
 		internal function setGraphicsMode( params:Array ):void {
+			var j:Number;
 			
 			for( var i:Number=2; i<params.length; i++ ){
 				switch( params[i] ){
@@ -249,7 +250,7 @@ package net.peternitsch.ansi.parser
 						if(params[i-1] == CharacterCodes.SEMICOLON || params[i-1] == CharacterCodes.LEFT_SQUARE_BRACKET) {
 							_bold = true;
 
-							for( var j:Number=0; j<_normalColors.length; j++ ){
+							for( j=0; j<_normalColors.length; j++ ){
 								if( _currentForegroundColor == _normalColors[j] )
 									_currentForegroundColor = _boldColors[j];
 							}
@@ -263,7 +264,7 @@ package net.peternitsch.ansi.parser
 						if(params[i-1] == CharacterCodes.SEMICOLON || params[i-1] == CharacterCodes.LEFT_SQUARE_BRACKET) {
 							_bold = false;
 
-							for( var j:Number=0; j<_normalColors.length; j++ ){
+							for( j=0; j<_normalColors.length; j++ ){
 								if( _currentForegroundColor == _boldColors[j] )
 									_currentForegroundColor = _normalColors[j];
 							}

@@ -114,7 +114,7 @@ int *wid, *hgt;
 #ifndef ANSI_DEFAULT
 		error("Can't get TERM.");
 #else
-# ifdef TOS
+# if 0
 	{
 		CO = 80; LI = 25;
 		TI = VS = VE = TE = nullstr;
@@ -144,6 +144,7 @@ int *wid, *hgt;
 			setclipped();
 #   endif
 #  endif
+
 		HO = "\033[H";
 /*		nh_CD = "\033[J"; */
 		CE = "\033[K";		/* the ANSI termcap */
@@ -835,9 +836,12 @@ cl_eos()			/* free after Robert Viduya */
 
 #include <curses.h>
 
+#ifndef __AVM2__
 #ifndef LINUX
 extern char *tparm();
 #endif
+#endif
+
 
 #  ifdef COLOR_BLACK	/* trust include file */
 #undef COLOR_BLACK

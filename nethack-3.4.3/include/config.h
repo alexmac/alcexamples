@@ -194,10 +194,12 @@
  */
 #define INSURANCE	/* allow crashed game recovery */
 
-#ifndef MAC
+#ifndef __AVM2__
+#ifndef MAC 
 # define CHDIR		/* delete if no chdir() available */
 #endif
-
+#endif
+ 
 #ifdef CHDIR
 /*
  * If you define HACKDIR, then this will be the default playground;

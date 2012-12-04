@@ -25,7 +25,6 @@ package net.peternitsch.ansi.telnet
 {
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
-	import flash.display.Stage;
 	import flash.events.*;
 	import flash.geom.Point;
 	import flash.net.Socket;
@@ -34,9 +33,10 @@ package net.peternitsch.ansi.telnet
 	import flash.utils.Timer;
 	
 	import net.peternitsch.ansi.parser.CharacterCodes;
+	import net.peternitsch.ansi.parser.CursorEvent;
 	import net.peternitsch.ansi.parser.DeviceEvent;
 	import net.peternitsch.ansi.viewer.AnsiViewer;
-	import net.peternitsch.ansi.viewer.Cursor;
+	import net.peternitsch.ansi.viewer.CharacterFactory;
 
 	public class TelnetSession extends Socket
 	{
@@ -45,7 +45,6 @@ package net.peternitsch.ansi.telnet
 		private var _serverURL:String;
 		private var _portNumber:int;
 		private var _commands:Commands;
-		private var _stage:Stage;
 		
 		/**
 		 * 
@@ -54,39 +53,27 @@ package net.peternitsch.ansi.telnet
 		 * @param port
 		 * 
 		 */		
-		public function TelnetSession(ansiviewer:AnsiViewer, host:String=null, port:Number=0, stage:Stage=null)
+		public function TelnetSession(ansiviewer:AnsiViewer, host:String=null, port:Number=0)
 		{
 			trace("AS3ANSI by Peter Nitsch : TelnetSession : constructor()");
 			super(host, port);
 			
 			viewer = ansiviewer;
-			viewer.parser.addEventListener(DeviceEvent.QUERY_CURSOR_POSITION, handleQueryCursorPosition, false, 0, true);
-			viewer.parser.addEventListener(DeviceEvent.QUERY_STATUS, handleQueryStatus, false, 0, true);
+			viewer.parser.addEventListener(DeviceEvent.QUERY_CURSOR_POSITION, handleQueryCursorPosition);
+			viewer.parser.addEventListener(DeviceEvent.QUERY_STATUS, handleQueryStatus);
 			
 			_commands = new Commands( this );
 			
 			_serverURL = host;
 			_portNumber = port;
-			_stage = stage;
 			
-			addEventListener(Event.CONNECT, handleConnect, false, 0, true);
-		    addEventListener(Event.CLOSE, handleClose, false, 0, true);
-		    addEventListener(ErrorEvent.ERROR, handleError, false, 0, true);
-		    addEventListener(IOErrorEvent.IO_ERROR, handleIOError, false, 0, true);
-		    addEventListener(ProgressEvent.SOCKET_DATA, handleSocketData, false, 0, true);
+			addEventListener(Event.CONNECT, handleConnect);
+		    addEventListener(Event.CLOSE, handleClose);
+		    addEventListener(ErrorEvent.ERROR, handleError);
+		    addEventListener(IOErrorEvent.IO_ERROR, handleIOError);
+		    addEventListener(ProgressEvent.SOCKET_DATA, handleSocketData);
 			
 		    
-		}
-		
-		/**
-		 * 
-		 * @param host
-		 * @param port
-		 * 
-		 */		
-		public function resetURL(host:String=null, port:Number=0):void {
-			_serverURL = host;
-			_portNumber = port;
 		}
 		
 		/**
@@ -109,14 +96,10 @@ package net.peternitsch.ansi.telnet
 		 */		
 		public function write( code:Number ):void
 		{
-			var byteObject:Object = new Object();
-			byteObject.byteArray = new ByteArray();
-		    
-		    byteObject.byteArray.writeMultiByte(String.fromCharCode(code), "us-ascii");
-		    writeBytes(byteObject.byteArray);
+		    var ba:ByteArray = new ByteArray();
+		    ba.writeMultiByte(String.fromCharCode(code), "utf-8");
+		    writeBytes(ba);
 		    flush();
-		    
-		    delete byteObject.byteArray;
 		}
 		 
 		public var cursor:Sprite;
@@ -125,32 +108,32 @@ package net.peternitsch.ansi.telnet
 		public function drawCursor( offsetX:Number=0, offsetY:Number=0 ):Sprite {
 			cursorOffset = new Point(offsetX, offsetY);
 			
-			//cursor = CharacterFactory.produce(CharacterCodes.LOW_LINE);
 			cursor = new Sprite();
 			cursor.graphics.beginFill(0xcccccc);
-			cursor.graphics.drawRect(0, Cursor.lineHeight-1, Cursor.columnWidth, 1);
+			cursor.graphics.drawRect(0, viewer.cursor.lineHeight-1, viewer.cursor.columnWidth, 1);
 			cursor.x = cursorOffset.x;
 			cursor.y = cursorOffset.y;
 			cursorTimer = new Timer(500);
-			cursorTimer.addEventListener(TimerEvent.TIMER, handleCursorTimer, false, 0, true);
+			cursorTimer.addEventListener(TimerEvent.TIMER, handleCursorTimer);
 			cursorTimer.start();
 			
+			viewer.addEventListener(CursorEvent.REPOSITION, handleCursorPosition);
 			return cursor;
 		}
 		
-		public function removeCursor():void {
-			cursorTimer.removeEventListener(TimerEvent.TIMER, handleCursorTimer);
+		//_______________________________ Socket handlers
+		
+		private function handleCursorPosition(e:CursorEvent):void {
+			cursor.x = e.position.x + cursorOffset.x;
+			cursor.y = e.position.y + cursorOffset.y;
 		}
 		
-		//_______________________________ Socket handlers
-
 		private function handleCursorTimer(e:TimerEvent):void {
 			cursor.alpha = (cursor.alpha==1) ? 0 : 1;
 		}
 		
 		private function handleUserInput(e:KeyboardEvent):void {
 			var key:Number = e.keyCode;
-			
 			// TO DO
 			switch (key) {
 				case Keyboard.LEFT :
@@ -216,51 +199,30 @@ package net.peternitsch.ansi.telnet
 		}
 		
 		private function handleClose(e:Event):void {
+	      	close();
+	      	
 	      	var canvas:Bitmap = viewer.getBitmap();
 			canvas.stage.removeEventListener(KeyboardEvent.KEY_DOWN, handleUserInput);
-			canvas.stage.removeEventListener(Event.ENTER_FRAME, handleEnterFrame);
-			close();
 	    }
 	    
 	    private function handleSocketData(e:ProgressEvent):void {    
-	    	//
-	    }
-	    
-	    public static var BAUD:Number = 33600;
-	    
-	    private function handleEnterFrame(e:Event):void {
-	    	var byteObject:Object = new Object();
-			byteObject.byteArray = new ByteArray();
+	       	//trace(e);
+	       	var ba:ByteArray = new ByteArray();
 
-	    	if(bytesAvailable > BAUD/_stage.frameRate ){ 
-	    		readBytes(byteObject.byteArray, 0, BAUD/_stage.frameRate);
-	    		viewer.readBytes(byteObject.byteArray);
-	    	} else if(bytesAvailable < BAUD/_stage.frameRate && bytesAvailable > 0){
-	    		
-	    		if( bytesAvailable == 1 ){
-	    			viewer.readByte(readByte());
-	    		} else {
-	    			readBytes(byteObject.byteArray, 0, bytesAvailable);
-	    			viewer.readBytes(byteObject.byteArray);
-	    		}
-	    	} 
-	    	
-	    	byteObject.byteArray = null;
-	    	delete byteObject.byteArray;
-	    	
-	    	if( cursor != null ){
-		    	cursor.x = Cursor.position.x + cursorOffset.x;
-				cursor.y = Cursor.position.y + cursorOffset.y;
-				//cursor.foreground = Cursor.foregroundColor;
-				//cursor.background = Cursor.backgroundColor;
-	    	}
-			
+    		if( bytesAvailable == 1 ){
+    			viewer.readByte(readByte());
+    		} else if( bytesAvailable > 1 ){
+    			readBytes(ba, 0, bytesAvailable);
+    			viewer.readBytes(ba);
+    		}
+
+                ba = null;
+
 	    }
-		
+		 
 	    private function handleConnect(e:Event):void {    	
 			var canvas:Bitmap = viewer.getBitmap();
 			canvas.stage.addEventListener(KeyboardEvent.KEY_DOWN, handleUserInput, false, 0, true);
-			canvas.stage.addEventListener(Event.ENTER_FRAME, handleEnterFrame, false, 0, true);
 			canvas.stage.focus = canvas.stage;
 	    }
 		
@@ -271,7 +233,7 @@ package net.peternitsch.ansi.telnet
 	    private function handleIOError(e:IOErrorEvent):void {
 	        trace("ioErrorHandler: " + e);
 	    }
-	    
+
 	    private function handleQueryCursorPosition(e:DeviceEvent):void {
 			writeByte(CharacterCodes.ESCAPE);
 			writeByte(CharacterCodes.LEFT_SQUARE_BRACKET);

@@ -248,6 +248,10 @@ register struct monst *mtmp;
 #define NOTIFY_NETHACK_BUGS
 #endif
 
+#ifdef __AVM2__
+#include <AS3/AS3.h>
+#endif
+
 /*VARARGS1*/
 void
 panic VA_DECL(const char *, str)
@@ -256,6 +260,14 @@ panic VA_DECL(const char *, str)
 
 	if (program_state.panicking++)
 	    NH_abort();	/* avoid loops - this should never happen*/
+
+	#ifdef __AVM2__
+		char panicbuf[BUFSZ];
+	    Vsprintf(panicbuf,str,VA_ARGS);
+	    AS3_DeclareVar(panicstring, String);
+	    AS3_CopyCStringToVar(panicstring, &panicbuf[0], strlen(&panicbuf[0]));
+		inline_as3("throw new Error(\"NetHack panic: \" + panicstring);");
+	#endif
 
 	if (iflags.window_inited) {
 	    raw_print("\r\nOops...");

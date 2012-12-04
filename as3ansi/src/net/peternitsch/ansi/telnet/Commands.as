@@ -258,7 +258,7 @@ package net.peternitsch.ansi.telnet
 			switch (buf[0]) {
 				case WILL:
 					if (supported(buf[1]) && isEnabled(buf[1])) {
-						;
+
 					} else {
 						if (waitDOreply(buf[1]) && supported(buf[1])) {
 							enable(buf[1]);
@@ -375,7 +375,7 @@ package net.peternitsch.ansi.telnet
 					ba.writeByte(SB);
 					ba.writeByte(TTYPE);
 					ba.writeByte(IS);
-					ba.writeMultiByte("ansi", "us-ascii");
+					ba.writeUTF("ansi");
 					ba.writeByte(IAC);
 					ba.writeByte(SE);
 					  
@@ -420,12 +420,13 @@ package net.peternitsch.ansi.telnet
 		}
 		
 		public function handleLMSLC():void {
+			var ba:ByteArray;
 			var triple:Array = new Array(3);
 			if (!readTriple(triple)) return;
 			
 			if ((triple[0] == 0) && (triple[1] == LM_SLC_DEFAULT) && (triple[2] == 0)) {
 				skipToSE();
-				var ba:ByteArray = new ByteArray();
+				ba = new ByteArray();
 				ba.writeByte(IAC);
 				ba.writeByte(SB);
 				ba.writeByte(LINEMODE);
@@ -443,7 +444,7 @@ package net.peternitsch.ansi.telnet
 				_session.flush();
 				ba = null;
 			} else {
-				var ba:ByteArray = new ByteArray();
+				ba = new ByteArray();
 				ba.writeByte(IAC);
 				ba.writeByte(SB);
 				ba.writeByte(LINEMODE);
@@ -706,7 +707,7 @@ package net.peternitsch.ansi.telnet
 		}
 		
 		private function skipToSE():void {
-			while (bytes.readUnsignedByte() != SE) ;
+			while (bytes.readUnsignedByte() != SE) { }
 		}
 		
 		private function readTriple(triple:Array):Boolean {

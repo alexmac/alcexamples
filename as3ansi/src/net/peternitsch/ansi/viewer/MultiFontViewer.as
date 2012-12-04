@@ -50,7 +50,7 @@ package net.peternitsch.ansi.viewer
 		 * @param scroll
 		 * 
 		 */		
-		public function MultiFontViewer(font="80x25", columnWidth:Number=80, lineHeight:Number=24, scroll:Boolean=true)
+		public function MultiFontViewer(font:String="80x25", columnWidth:Number=80, lineHeight:Number=24, scroll:Boolean=true)
 		{
 			createLUT();
 			super(columnWidth, lineHeight, scroll);

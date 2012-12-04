@@ -23,7 +23,49 @@ clean:
 	find cube2/ | grep "\.swf$$" | xargs rm -f
 
 nethack:
-	
+	mkdir -p $(BUILD)/nethack
+	cd as3ansi/src && "$(FLEX)/bin/compc" -load-config+=as3ansi.xml
+
+	$(FLASCC)/usr/bin/gcc -O4 -DHACKDIR="\"/\"" -DANSI_DEFAULT -DNO_FILE_LINKS -DLOCKDIR="\"/locks\"" \
+		-I$(ALCEXTRA)/install/usr/include/ncurses -I$(ALCEXTRA)/install/usr/include \
+		-Inethack-3.4.3/include -Inethack-3.4.3 \
+		nethack-3.4.3/src/*.c nethack-3.4.3/win/tty/*.c \
+		nethack-3.4.3/sys/share/unixtty.c nethack-3.4.3//sys/share/ioctl.c \
+		nethack-3.4.3/sys/share/tclib.c nethack-3.4.3/sys/unix/*.c \
+		$(FLASCC)/usr/lib/AlcVFSZip.abc \
+		-L$(ALCEXTRA)/install/usr/lib -lncurses -emit-swc=nethack -pthread -o nethack.swc
+
+nhb:
+	mkdir -p $(BUILD)/nethack
+	cd nethack-3.4.3 && CC=gcc PATH=$(FLASCC)/usr/bin:$(PATH) make clean
+	cd nethack-3.4.3 && CC=gcc PATH=$(FLASCC)/usr/bin:$(PATH) make install -j6 \
+		PREFIX=$(BUILD)/nethack CHGRP=true CHOWN=true \
+		WINTTYLIB="-lncurses" \
+		CFLAGS="-O0 -I../include \
+			-DANSI_DEFAULT -DNO_FILE_LINKS -DLOCKDIR='\"/locks\"' \
+			-I$(ALCEXTRA)/install/usr/include  -I$(ALCEXTRA)/install/usr/include/ncurses" \
+		LFLAGS="-O0 -L$(ALCEXTRA)/install/usr/lib -pthread "
+
+	$(FLASCC)/usr/bin/gcc -O4 \
+		nethack-3.4.3/src/*.o \
+		$(FLASCC)/usr/lib/AlcVFSZip.abc \
+		-L$(ALCEXTRA)/install/usr/lib -lncurses -emit-swc=nethack -pthread -o nethack.swc
+nh:
+	rm -f build/nethack/games/lib/nethackdir/nethack build/nethack/games/lib/nethackdir/recover
+	mkdir -p build/nethack/games/lib/nethackdir/locks
+	touch build/nethack/games/lib/nethackdir/locks/perm_lock
+	cp -f nethack-3.4.3/.nethackrc build/nethack/games/lib/nethackdir
+	chmod -R a+rw build/nethack/games/lib/*
+	rm -f nethackvfs.zip
+	cd build/nethack/games/lib/nethackdir && zip -9 -q -r ../../../../../nethackvfs.zip * .nethackrc
+
+	cd nethack-3.4.3 && $(FLEX)/bin/mxmlc \
+		-static-link-runtime-shared-libraries \
+		-library-path+=../nethack.swc \
+		-library-path+=../as3ansi/src/as3ansi.swc \
+		-source-path=. \
+		-swf-version=18 -debug=true \
+		com/adobe/flascc/Console.as
 
 neverball:
 	mkdir -p $(BUILD)/neverball/

@@ -21,6 +21,9 @@ extern struct window_procs Qt_procs;
 #ifdef MAC
 extern struct window_procs mac_procs;
 #endif
+#ifdef __AVM2__
+extern struct window_procs tty_procs;
+#endif
 #ifdef BEOS_GRAPHICS
 extern struct window_procs beos_procs;
 extern void NDECL(be_win_init);

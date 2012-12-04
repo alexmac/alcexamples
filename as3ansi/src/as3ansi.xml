@@ -1,0 +1,27 @@
+<flex-config>
+	<output>as3ansi.swc</output>
+	<compiler>
+		<source-path>
+			<path-element>.</path-element>
+		</source-path>
+	</compiler>
+	<include-classes>
+		<class>net.peternitsch.ansi.AS3ANSI</class>
+		<class>net.peternitsch.ansi.telnet.Commands</class>
+		<class>net.peternitsch.ansi.telnet.TelnetSession</class>
+		<class>net.peternitsch.ansi.viewer.AnsiViewer</class>       
+		<class>net.peternitsch.ansi.viewer.Character</class>        
+		<class>net.peternitsch.ansi.viewer.CharacterFactory</class> 
+		<class>net.peternitsch.ansi.viewer.Cursor</class>           
+		<class>net.peternitsch.ansi.viewer.MultiFontViewer</class>  
+		<class>net.peternitsch.ansi.viewer.ViewerEvent</class>      
+		<class>net.peternitsch.ansi.parser.AnsiParser</class>     
+		<class>net.peternitsch.ansi.parser.CharacterCodes</class> 
+		<class>net.peternitsch.ansi.parser.CursorEvent</class>    
+		<class>net.peternitsch.ansi.parser.DeviceEvent</class>    
+		<class>net.peternitsch.ansi.parser.EscapeSequencer</class>
+		<class>net.peternitsch.ansi.parser.GraphicsEvent</class>  
+		<class>net.peternitsch.ansi.parser.SixteenColors</class>  
+	</include-classes>
+</flex-config>
+

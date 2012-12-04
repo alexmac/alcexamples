@@ -583,9 +583,11 @@ initoptions()
 		if (*opts == '/' || *opts == '\\' || *opts == '@') {
 			if (*opts == '@') opts++;	/* @filename */
 			/* looks like a filename */
+			tprintf("read config... %s\n", opts);
 			if (strlen(opts) < BUFSZ/2)
 			    read_config_file(opts);
 		} else {
+			tprintf("read null config...\n");
 			read_config_file((char *)0);
 			/* let the total length of options be long;
 			 * parseoptions() will check each individually

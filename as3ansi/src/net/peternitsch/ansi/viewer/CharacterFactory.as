@@ -25,6 +25,9 @@ package net.peternitsch.ansi.viewer
 {
 	import flash.text.TextField;
 	import flash.text.TextFormat;
+	import flash.display.Bitmap;
+	import flash.display.BitmapData;
+	import flash.utils.ByteArray;
 	
 	/**
 	 * CharacterFactory
@@ -44,11 +47,10 @@ package net.peternitsch.ansi.viewer
 		public static function produce( characterCode:*, foreground:uint, background:uint, w:Number, h:Number ):Character {
 			var character:Character = new Character( characterCode, background, w, h );
 			character.addChild( generateSymbolFromFont(characterCode, foreground) );
-			
 			return character;
 		}
 		
-		[Embed(source="Perfect DOS VGA 437.ttf", fontName="Font", mimeType="application/x-font-truetype")]
+		[Embed(source="Perfect DOS VGA 437.ttf", fontName="Font", mimeType="application/x-font-truetype",embedAsCFF="false")]
 		private static var EMBEDDED_FONT:String;
 		
 		internal static function generateSymbolFromFont( stringCharCode:Number, color:uint ):TextField {	

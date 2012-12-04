@@ -279,17 +279,23 @@ const char *basename;
 int whichprefix, buffnum;
 {
 #ifndef PREFIXES_IN_USE
+	tprintf("PREFIXES_IN_USE... false\n");
 	return basename;
 #else
+	tprintf("PREFIXES_IN_USE... true\n");
+
 	if (!basename || whichprefix < 0 || whichprefix >= PREFIX_COUNT)
 		return basename;
+	tprintf("PREFIXES_IN_USE... true 1\n");
 	if (!fqn_prefix[whichprefix])
 		return basename;
+	tprintf("PREFIXES_IN_USE... true 2\n");
 	if (buffnum < 0 || buffnum >= FQN_NUMBUF) {
 		impossible("Invalid fqn_filename_buffer specified: %d",
 								buffnum);
 		buffnum = 0;
 	}
+	tprintf("PREFIXES_IN_USE... %s\n", fqn_prefix[whichprefix]);
 	if (strlen(fqn_prefix[whichprefix]) + strlen(basename) >=
 						    FQN_MAX_FILENAME) {
 		impossible("fqname too long: %s + %s", fqn_prefix[whichprefix],
@@ -429,6 +435,7 @@ char errbuf[];
 	if (errbuf) *errbuf = '\0';
 	set_levelfile_name(lock, lev);
 	fq_lock = fqname(lock, LEVELPREFIX, 0);
+	fprintf(stderr, "fqlock: %s %s\n", fq_lock, lock);
 
 #if defined(MICRO) || defined(WIN32)
 	/* Use O_TRUNC to force the file to be shortened if it already
@@ -1291,6 +1298,13 @@ const char *filename;
 int whichprefix;
 int retryct;
 {
+	#ifdef __AVM2__
+		(void)filename;
+		(void)whichprefix;
+		(void)retryct;
+		return TRUE;
+	#endif
+
 #if (defined(macintosh) && (defined(__SC__) || defined(__MRC__))) || defined(__MWERKS__)
 # pragma unused(filename, retryct)
 #endif
@@ -1311,7 +1325,7 @@ int retryct;
 
 #if defined(UNIX) || defined(VMS)
 # ifdef NO_FILE_LINKS
-	while ((lockfd = open(lockname, O_RDWR|O_CREAT|O_EXCL, 0666)) == -1) {
+	while ((lockfd = open(lockname, O_RDWR|O_CREAT, 0666)) == -1) {
 # else
 	while (link(filename, lockname) == -1) {
 # endif
@@ -1321,8 +1335,8 @@ int retryct;
 	    case EEXIST:
 		if (retryct--) {
 		    HUP raw_printf(
-			    "Waiting for access to %s.  (%d retries left).",
-			    filename, retryct);
+			    "Waiting for access to %s. %s  (%d retries left).",
+			    filename, lockname, retryct);
 # if defined(SYSV) || defined(ULTRIX) || defined(VMS)
 		    (void)
 # endif
@@ -1337,7 +1351,7 @@ int retryct;
 
 		break;
 	    case ENOENT:
-		HUP raw_printf("Can't find file %s to lock!", filename);
+		HUP raw_printf("Can't find file %s to lock! %s", filename, lockname);
 		nesting--;
 		return FALSE;
 	    case EACCES:
@@ -1416,6 +1430,11 @@ const char *filename;
 {
 	char locknambuf[BUFSZ];
 	const char *lockname;
+
+	#ifdef __AVM2__
+		(void)filename;
+		return;
+	#endif
 
 	if (nesting == 1) {
 		lockname = make_lockname(filename, locknambuf);
@@ -1507,6 +1526,7 @@ const char *filename;
 #endif
 		if ((fp = fopenp(filename, "r")) != (FILE *)0) {
 		    configfile = filename;
+		    tprintf("fopen success: %s\n", filename);
 		    return(fp);
 #if defined(UNIX) || defined(VMS)
 		} else {
@@ -1554,6 +1574,7 @@ const char *filename;
 		Strcpy(tmp_config, configfile);
 	else
 		Sprintf(tmp_config, "%s/%s", envp, configfile);
+	tprintf("tmp config: %s\n", tmp_config);
 	if ((fp = fopenp(tmp_config, "r")) != (FILE *)0)
 		return(fp);
 # if defined(__APPLE__)
@@ -1583,6 +1604,7 @@ const char *filename;
 	}
 # endif
 #endif
+	tprintf("read config fail: %s\n", filename);
 	return (FILE *)0;
 
 }
@@ -1658,6 +1680,8 @@ int prefixid;
 {
 	char *ptr;
 
+	tprintf("adjust_prefix: %s %d\n", bufp, prefixid);
+
 	if (!bufp) return;
 	/* Backward compatibility, ignore trailing ;n */ 
 	if ((ptr = index(bufp, ';')) != 0) *ptr = '\0';
@@ -1712,6 +1736,8 @@ char		*tmp_levels;
 	/* some of these (at least LEVELS and SAVE) should now set the
 	 * appropriate fqn_prefix[] rather than specialized variables
 	 */
+
+	 tprintf("buf: %s\n", buf);
 	if (match_varname(buf, "OPTIONS", 4)) {
 		parseoptions(bufp, TRUE, TRUE);
 		if (plname[0])		/* If a name was given */

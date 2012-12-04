@@ -58,6 +58,7 @@ static const char *FDECL(tc_field, (const char *,const char **));
 #define min(a,b) ((a)<(b)?(a):(b))
 #endif
 
+extern void tprintf(const char *fmt, ...);
 /* retrieve the specified terminal entry and return it in `entbuf' */
 int
 tgetent(entbuf, term)
@@ -68,28 +69,37 @@ tgetent(entbuf, term)
     FILE *fp;
     char *tc = getenv("TERMCAP");
 
+    tprintf("tcgetent1: %s %s\n", tc, TERMCAP);
+
     tc_entry = entbuf;
     if (!entbuf || !term)
 	return -1;
     /* if ${TERMCAP} is found as a file, it's not an inline termcap entry */
     if ((fp = fopen(tc ? tc : TERMCAP, "r")) != 0)
 	tc = 0;
+
+	tprintf("tcgetent2: %s %p\n", tc, fp);
+
     /* if ${TERMCAP} isn't a file and `term' matches ${TERM}, use ${TERMCAP} */
     if (tc) {
 	char *tm = getenv("TERM");
 	if (tm && strcmp(tm, term) == 0)
 	    return tc_store(term, tc);
 	fp = fopen(TERMCAP, "r");
+	tprintf("tcgetent3\n");
     }
     /* otherwise, look `term' up in the file */
     if (fp) {
 	char wrkbuf[TCBUFSIZ];
 	tc = tc_find(fp, term, wrkbuf, (int)(sizeof wrkbuf - strlen(term)));
 	result = tc_store(term, tc);
+	tprintf("tcgetent4 %s %s\n", tc, term);
 	(void) fclose(fp);
     } else {
+    	tprintf("tcgetent5\n");
 	result = -1;
     }
+    tprintf("tcgetent6\n");
     return result;
 }
 

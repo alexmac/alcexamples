@@ -53,6 +53,15 @@ package net.peternitsch.ansi.viewer
 			
 		}
 
+		public function get x():int {
+			return position.x;
+		}
+
+		public function get y():int {
+			return position.y;
+		}
+
+
 		public function moveForward( columns:Number=1 ):void {
 			if( position.x + (columns*columnWidth) <= maxColumns * columnWidth )
 				position.x = position.x + (columns*columnWidth);
