@@ -4,7 +4,7 @@ _Unwind_SjLj_Unregister
 __hack_used
 _start1
 _sync_synchronize
-alc_uiTickProc
+flascc_uiTickProc
 free
 main
 malloc
